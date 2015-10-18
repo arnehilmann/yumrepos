@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+import json
+import os
+
+from flask import Flask, render_template, request, abort
+from werkzeug import secure_filename
+
+app = Flask(__name__)
+
+app.config['ALLOWED_EXTENSIONS'] = set(['rpm'])
+app.config['REPOS_FOLDER'] = 'repos/'
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/repos/', methods=['GET', 'PUT'])
+def get_repos():
+    if request.method == 'PUT':
+        print vars(request)
+        file = ""
+        print file
+        new_reponame = os.path.join(app.config['REPOS_FOLDER'], file)
+        return new_reponame
+    return json.dumps(os.listdir(app.config['REPOS_FOLDER']), indent=4)
+
+
+@app.route('/repos/<reponame>/', methods=['GET', 'POST'])
+def get_repo(reponame):
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['REPOS_FOLDER'], reponame, filename))
+            # createrepo here
+            return get_rpm(reponame, filename)
+        else:
+            abort(404)
+    return json.dumps(os.listdir(os.path.join(app.config['REPOS_FOLDER'], reponame)), indent=4)
+
+
+@app.route('/repos/<reponame>/<rpmname>')
+def get_rpm(reponame, rpmname):
+    filename = os.path.join(app.config['REPOS_FOLDER'], reponame, rpmname)
+    return filename
+
+
+if __name__ == '__main__':
+    app.run(
+        host="0.0.0.0",
+        port=int("8080"),
+        debug=True
+    )
