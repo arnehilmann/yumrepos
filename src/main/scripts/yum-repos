@@ -14,6 +14,7 @@ app = Flask(__name__)
 app.config['ALLOWED_EXTENSIONS'] = set(['rpm'])
 app.config['REPOS_FOLDER'] = os.path.abspath('repos/')
 app.config['SERVE_STATIC_FILES'] = True
+app.config['CREATEREPO_BIN'] = 'createrepo_c'
 
 
 @app.before_first_request
@@ -78,7 +79,7 @@ def remove_repo(reponame):
 
 
 def create_repo_metadata(reponame):
-    subprocess.check_call(["createrepo_c", os.path.join(app.config['REPOS_FOLDER'], reponame)])
+    subprocess.check_call([app.config['CREATEREPO_BIN'], os.path.join(app.config['REPOS_FOLDER'], reponame)])
 
 
 @app.route('/admin/repos/<reponame>', methods=['POST'])
