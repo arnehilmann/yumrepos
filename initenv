@@ -1,2 +1,2 @@
-export PATH=$PWD/src/main/scripts:$PWD/ve/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/arne-epost/.rvm/bin:/Users/arne-epost/.rvm/bin
+export PATH=$PWD/src/main/scripts:$PWD/src/tests/scripts:$PWD/ve/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/arne-epost/.rvm/bin:/Users/arne-epost/.rvm/bin
 export PYTHONPATH=src/main/python

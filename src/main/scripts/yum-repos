@@ -1,55 +1,118 @@
 #!/usr/bin/env python
+import glob
 import json
 import os
+import shutil
+import subprocess
 
-from flask import Flask, render_template, request, abort
+from flask import Flask, request, abort, send_file
 from werkzeug import secure_filename
+
+# curl http://localhost:8080/repos
+# curl -X PUT http://localhost:8080/admin/repos/new-repo
+# curl http://localhost:8080/repos/new-repo
+# curl -F rpm=@foo-1.0.rpm http://localhost:8080/admin/repos/new-repo
+# curl http://localhost:8080/repos/new-repo
+# curl -X DELETE http://localhost:8080/admin/repos/new-repo/foo-1.0
+# curl -X DELETE http://localhost:8080/admin/repos/new-repo
 
 app = Flask(__name__)
 
 app.config['ALLOWED_EXTENSIONS'] = set(['rpm'])
-app.config['REPOS_FOLDER'] = 'repos/'
+app.config['REPOS_FOLDER'] = os.path.abspath('repos/')
+app.config['SERVE_STATIC_FILES'] = True
+
+
+@app.before_first_request
+def init_env():
+    try:
+        os.mkdir(app.config['REPOS_FOLDER'])
+    except OSError as e:
+        if e.errno != 17:
+            raise
 
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
+        filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+if app.config['SERVE_STATIC_FILES']:
+    @app.route('/repos', methods=['GET'])
+    def get_repos():
+        return json.dumps(os.listdir(app.config['REPOS_FOLDER']), indent=4)
+
+    @app.route('/repos/<reponame>', methods=['GET'])
+    def get_repo(reponame):
+        return json.dumps(glob.glob(os.path.join(app.config['REPOS_FOLDER'], reponame, '*.rpm')), indent=4)
+
+    @app.route('/repos/<reponame>/<rpmname>', methods=['GET'])
+    def get_rpm(reponame, rpmname):
+        filename = os.path.join(app.config['REPOS_FOLDER'], reponame, rpmname)
+        return send_file(filename)
+
+    @app.route('/repos/<reponame>/repodata/<filename>')
+    def serve_repodata(reponame, filename):
+        static_filename = os.path.join(app.config['REPOS_FOLDER'], reponame, 'repodata', filename)
+        return send_file(static_filename)
 
 
-@app.route('/repos/', methods=['GET', 'PUT'])
-def get_repos():
-    if request.method == 'PUT':
-        print vars(request)
-        file = ""
-        print file
-        new_reponame = os.path.join(app.config['REPOS_FOLDER'], file)
-        return new_reponame
-    return json.dumps(os.listdir(app.config['REPOS_FOLDER']), indent=4)
+@app.route('/admin/repos/<reponame>', methods=['PUT'])
+def create_repo(reponame):
+    try:
+        os.mkdir(os.path.join(app.config['REPOS_FOLDER'], reponame))
+    except OSError as e:
+        if e.errno != 17:
+            raise
+    create_repo_metadata(reponame)
+    return ('', 201)
 
 
-@app.route('/repos/<reponame>/', methods=['GET', 'POST'])
-def get_repo(reponame):
-    if request.method == 'POST':
-        file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['REPOS_FOLDER'], reponame, filename))
-            # createrepo here
-            return get_rpm(reponame, filename)
-        else:
-            abort(404)
-    return json.dumps(os.listdir(os.path.join(app.config['REPOS_FOLDER'], reponame)), indent=4)
+@app.route('/admin/repos/<reponame>', methods=['DELETE'])
+def remove_repo(reponame):
+    repopath = os.path.join(app.config['REPOS_FOLDER'], reponame)
+    if not os.path.exists(repopath):
+        abort(404)
+    if len(glob.glob(os.path.join(repopath, "*.rpm"))) > 0:
+        return "repo not empty, aborting", 409
+    try:
+        shutil.rmtree(repopath)
+    except OSError as e:
+        if e.errno == 39:
+            abort(409)
+        raise
+    return ('', 204)
 
 
-@app.route('/repos/<reponame>/<rpmname>')
-def get_rpm(reponame, rpmname):
+def create_repo_metadata(reponame):
+    subprocess.check_call(["createrepo_c", os.path.join(app.config['REPOS_FOLDER'], reponame)])
+
+
+@app.route('/admin/repos/<reponame>', methods=['POST'])
+def upload_rpm(reponame):
+    file = request.files['rpm']
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        complete_filename = os.path.join(app.config['REPOS_FOLDER'], reponame, filename)
+        if os.path.exists(complete_filename):
+            return "%s already exists" % file.filename, 409
+        file.save(complete_filename)
+        create_repo_metadata(reponame)
+        return ('', 201)
+    return "%s not a valid rpm" % file.filename, 400
+
+
+@app.route('/admin/repos/<reponame>/<rpmname>', methods=['DELETE'])
+def remove_rpm(reponame, rpmname):
     filename = os.path.join(app.config['REPOS_FOLDER'], reponame, rpmname)
-    return filename
+    try:
+        os.unlink(filename)
+        create_repo_metadata(reponame)
+    except OSError as e:
+        if e.errno == 2:
+            abort(404)
+        raise
+    return ('', 204)
 
 
 if __name__ == '__main__':
