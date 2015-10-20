@@ -8,13 +8,6 @@ import subprocess
 from flask import Flask, request, abort, send_file
 from werkzeug import secure_filename
 
-# curl http://localhost:8080/repos
-# curl -X PUT http://localhost:8080/admin/repos/new-repo
-# curl http://localhost:8080/repos/new-repo
-# curl -F rpm=@foo-1.0.rpm http://localhost:8080/admin/repos/new-repo
-# curl http://localhost:8080/repos/new-repo
-# curl -X DELETE http://localhost:8080/admin/repos/new-repo/foo-1.0
-# curl -X DELETE http://localhost:8080/admin/repos/new-repo
 
 app = Flask(__name__)
 
@@ -96,9 +89,13 @@ def upload_rpm(reponame):
         complete_filename = os.path.join(app.config['REPOS_FOLDER'], reponame, filename)
         if os.path.exists(complete_filename):
             return "%s already exists" % file.filename, 409
-        file.save(complete_filename)
-        create_repo_metadata(reponame)
-        return ('', 201)
+        try:
+            file.save(complete_filename)
+            create_repo_metadata(reponame)
+            return ('', 201)
+        except IOError as e:
+            if e.errno == 2:
+                abort(404)
     return "%s not a valid rpm" % file.filename, 400
 
 
