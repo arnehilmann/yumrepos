@@ -5,7 +5,7 @@ TESTREPO=repos/testrepo
 
 rm -rf $TESTREPO
 
-set -x
+# set -x
 
 curl http://localhost:8080/repos           -i -s | grep "200 OK"
 
@@ -25,6 +25,14 @@ curl http://localhost:8080/$TESTREPO       -i -s | grep "200 OK"
 [[ -e $TESTREPO/foo-1.0-1.x86_64.rpm ]]
 [[ -d $TESTREPO/repodata ]]
 
+if yum --version &> /dev/null; then
+    echo "'yum' command found, testing testrepo now"
+    yum -c res/yum.conf repolist
+    yum -c res/yum.conf search foo | grep "foo.x86_64"
+    # sudo yum -c res/yum.conf install foo -y
+    # sudo yum -c res/yum.conf remove foo -y
+fi
+
 curl -X DELETE \
     http://localhost:8080/admin/$TESTREPO  -i -s | grep "409 CONFLICT"
 
@@ -39,5 +47,5 @@ curl -X DELETE \
 
 [[ ! -d $TESTREPO ]]
 
-set +x
+# set +x
 echo "SUCCESS"
