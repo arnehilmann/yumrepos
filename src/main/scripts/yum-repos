@@ -100,6 +100,23 @@ def upload_rpm(reponame):
     return "%s not a valid rpm" % file.filename, 400
 
 
+@app.route('/admin/repos/<reponame>/<rpmname>', methods=['POST', 'STAGE'])
+def stage_rpm(reponame, rpmname):
+    source_rpmname = os.path.join(app.config['REPOS_FOLDER'], reponame, rpmname)
+    if not os.path.exists(source_rpmname):
+        return "source rpm '%s/%s' does not exist" % (reponame, rpmname), 404
+    target_reponame = request.form.get('target-repo')
+    if not os.path.exists(os.path.join(app.config['REPOS_FOLDER'], target_reponame)):
+        return "target repo '%s' does not exist" % target_reponame, 404
+    target_rpmname = os.path.join(app.config['REPOS_FOLDER'], target_reponame, rpmname)
+    if os.path.exists(target_rpmname):
+        abort(409)
+    shutil.move(source_rpmname, target_rpmname)
+    create_repo_metadata(reponame)
+    create_repo_metadata(target_reponame)
+    return '', 201
+
+
 @app.route('/admin/repos/<reponame>/<rpmname>', methods=['DELETE'])
 def remove_rpm(reponame, rpmname):
     filename = os.path.join(app.config['REPOS_FOLDER'], reponame, rpmname)
