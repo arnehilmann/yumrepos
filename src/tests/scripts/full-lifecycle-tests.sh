@@ -1,51 +1,71 @@
 #!/bin/bash
-set -e -E -u
+set -e -E -u -o pipefail -C
 
-TESTREPO=repos/testrepo
+TESTREPO1=repos/repo1
+TESTREPO2=repos/repo2
+HOST=http://localhost:8080
+TESTRPM=foo-1.0-1.x86_64.rpm
 
-rm -rf $TESTREPO
+TEST_YUM=false
+if yum --version &> /dev/null; then
+    TEST_YUM=true
+    YUM="yum -c res/yum.conf"
+    echo "'yum' command found, testing testrepo now"
+fi
+
+rm -rf $TESTREPO1 $TESTREPO2
 
 # set -x
 
-curl http://localhost:8080/repos           -i -s | grep "200 OK"
+curl $HOST/repos           -i -s | grep "200 OK"
 
-curl -F rpm=@res/foo-1.0-1.x86_64.rpm \
-    http://localhost:8080/admin/$TESTREPO  -i -s | grep "404 NOT FOUND"
+curl -F rpm=@res/$TESTRPM \
+    $HOST/admin/$TESTREPO1  -i -s | grep "404 NOT FOUND"
 
 curl -X PUT \
-    http://localhost:8080/admin/$TESTREPO  -i -s | grep "201 CREATED"
+    $HOST/admin/$TESTREPO1  -i -s | grep "201 CREATED"
 
-curl http://localhost:8080/$TESTREPO       -i -s | grep "200 OK"
+curl -X PUT \
+    $HOST/admin/$TESTREPO2 -i -s | grep "201 CREATED"
 
-curl -F rpm=@res/foo-1.0-1.x86_64.rpm \
-    http://localhost:8080/admin/$TESTREPO  -i -s | grep "201 CREATED"
+curl $HOST/$TESTREPO1       -i -s | grep "200 OK"
 
-curl http://localhost:8080/$TESTREPO       -i -s | grep "200 OK"
+curl -F rpm=@res/$TESTRPM \
+    $HOST/admin/$TESTREPO1  -i -s | grep "201 CREATED"
 
-[[ -e $TESTREPO/foo-1.0-1.x86_64.rpm ]]
-[[ -d $TESTREPO/repodata ]]
+curl $HOST/$TESTREPO1       -i -s | grep "200 OK"
 
-if yum --version &> /dev/null; then
-    echo "'yum' command found, testing testrepo now"
-    yum -c res/yum.conf repolist
-    yum -c res/yum.conf search foo | grep "foo.x86_64"
-    # sudo yum -c res/yum.conf install foo -y
-    # sudo yum -c res/yum.conf remove foo -y
+[[ -e $TESTREPO1/$TESTRPM ]]
+[[ -d $TESTREPO1/repodata ]]
+
+if $TEST_YUM; then
+    $YUM clean all
+    $YUM repolist
+    $YUM search foo | grep "foo.x86_64"
+    $YUM info foo | grep "Repo"
+fi
+
+curl -X STAGE -d target-repo=repo2 $HOST/admin/$TESTREPO1/$TESTRPM
+
+if $TEST_YUM; then
+    $YUM clean all
+    $YUM repolist
+    $YUM search foo | grep "foo.x86_64"
+    $YUM info foo | grep "Repo"
 fi
 
 curl -X DELETE \
-    http://localhost:8080/admin/$TESTREPO  -i -s | grep "409 CONFLICT"
+    $HOST/admin/$TESTREPO2  -i -s | grep "409 CONFLICT"
 
 curl -X DELETE \
-    http://localhost:8080/admin/$TESTREPO/foo-1.0-1.x86_64.rpm -i -s | grep "204 NO CONTENT"
+    $HOST/admin/$TESTREPO2/$TESTRPM -i -s | grep "204 NO CONTENT"
 
 curl -X DELETE \
-    http://localhost:8080/admin/$TESTREPO/foo-1.0-1.x86_64.rpm  -i -s | grep "404 NOT FOUND"
+    $HOST/admin/$TESTREPO2/$TESTRPM  -i -s | grep "404 NOT FOUND"
 
 curl -X DELETE \
-    http://localhost:8080/admin/$TESTREPO  -i -s | grep "204 NO CONTENT"
+    $HOST/admin/$TESTREPO2  -i -s | grep "204 NO CONTENT"
 
-[[ ! -d $TESTREPO ]]
+[[ ! -d $TESTREPO2 ]]
 
-# set +x
 echo "SUCCESS"
