@@ -9,21 +9,92 @@ from flask import Flask, request, abort, send_file
 from werkzeug import secure_filename
 
 
+class FsBackend(object):
+    def __init__(self, repos_folder, createrepo_bin):
+        self.repos_folder = repos_folder
+        self.createrepo_bin = createrepo_bin
+
+    def init_env(self):
+        try:
+            os.mkdir(self.repos_folder)
+        except OSError as e:
+            if e.errno != 17:
+                raise
+
+    def create_repo_metadata(self, reponame):
+        subprocess.check_call([self.createrepo_bin, os.path.join(self.repos_folder, reponame)])
+
+    def create_repo(self, reponame):
+        try:
+            os.mkdir(self._to_path(reponame))
+        except OSError as e:
+            if e.errno != 17:
+                raise
+        self.create_repo_metadata(reponame)
+        return ('', 201)
+
+    def remove_repo(self, reponame):
+        repopath = self._to_path(reponame)
+        if not os.path.exists(repopath):
+            abort(404)
+        if len(glob.glob(os.path.join(repopath, "*.rpm"))) > 0:
+            return "repo not empty, aborting", 409
+        try:
+            shutil.rmtree(repopath)
+        except OSError as e:
+            if e.errno == 39:
+                abort(409)
+            raise
+        return ('', 204)
+
+    def upload_rpm(self, reponame, file):
+        filename = secure_filename(file.filename)
+        complete_filename = self._to_path(reponame, filename)
+        if os.path.exists(complete_filename):
+            return "%s already exists" % filename, 409
+        try:
+            file.save(complete_filename)
+            self.create_repo_metadata(reponame)
+            return ('', 201)
+        except IOError as e:
+            if e.errno == 2:
+                abort(404)
+
+    def _to_path(self, reponame, rpmname=''):
+        return os.path.join(self.repos_folder, reponame, rpmname)
+
+    def exists(self, reponame, rpmname=''):
+        return os.path.exists(self._to_path(reponame, rpmname))
+
+    def stage(self, source, rpm, target):
+        shutil.move(self._to_path(source, rpm), self._to_path(target, rpm))
+        self.create_repo_metadata(source)
+        self.create_repo_metadata(target)
+        return '', 201
+
+    def remove_rpm(self, reponame, rpmname):
+        filename = self._to_path(reponame, rpmname)
+        try:
+            os.unlink(filename)
+            self.create_repo_metadata(reponame)
+        except OSError as e:
+            if e.errno == 2:
+                abort(404)
+            raise
+        return ('', 204)
+
 app = Flask(__name__)
 
 app.config['ALLOWED_EXTENSIONS'] = set(['rpm'])
-app.config['REPOS_FOLDER'] = os.path.abspath('repos/')
 app.config['SERVE_STATIC_FILES'] = True
-app.config['CREATEREPO_BIN'] = 'createrepo_c'
+
+REPOS_FOLDER = os.path.abspath('repos')
+app.config['BACKEND'] = FsBackend(REPOS_FOLDER, 'createrepo_c')
 
 
 @app.before_first_request
 def init_env():
-    try:
-        os.mkdir(app.config['REPOS_FOLDER'])
-    except OSError as e:
-        if e.errno != 17:
-            raise
+    app.config['BACKEND'].init_env()
 
 
 def allowed_file(filename):
@@ -34,100 +105,57 @@ def allowed_file(filename):
 if app.config['SERVE_STATIC_FILES']:
     @app.route('/repos', methods=['GET'])
     def get_repos():
-        return json.dumps(os.listdir(app.config['REPOS_FOLDER']), indent=4)
+        return json.dumps(os.listdir(REPOS_FOLDER), indent=4)
 
     @app.route('/repos/<reponame>', methods=['GET'])
     def get_repo(reponame):
-        return json.dumps(glob.glob(os.path.join(app.config['REPOS_FOLDER'], reponame, '*.rpm')), indent=4)
+        return json.dumps(glob.glob(os.path.join(REPOS_FOLDER, reponame, '*.rpm')), indent=4)
 
     @app.route('/repos/<reponame>/<rpmname>', methods=['GET'])
     def get_rpm(reponame, rpmname):
-        filename = os.path.join(app.config['REPOS_FOLDER'], reponame, rpmname)
+        filename = os.path.join(REPOS_FOLDER, reponame, rpmname)
         return send_file(filename)
 
     @app.route('/repos/<reponame>/repodata/<filename>')
     def serve_repodata(reponame, filename):
-        static_filename = os.path.join(app.config['REPOS_FOLDER'], reponame, 'repodata', filename)
+        static_filename = os.path.join(REPOS_FOLDER, reponame, 'repodata', filename)
         return send_file(static_filename)
 
 
 @app.route('/admin/repos/<reponame>', methods=['PUT'])
 def create_repo(reponame):
-    try:
-        os.mkdir(os.path.join(app.config['REPOS_FOLDER'], reponame))
-    except OSError as e:
-        if e.errno != 17:
-            raise
-    create_repo_metadata(reponame)
-    return ('', 201)
+    return app.config['BACKEND'].create_repo(reponame)
 
 
 @app.route('/admin/repos/<reponame>', methods=['DELETE'])
 def remove_repo(reponame):
-    repopath = os.path.join(app.config['REPOS_FOLDER'], reponame)
-    if not os.path.exists(repopath):
-        abort(404)
-    if len(glob.glob(os.path.join(repopath, "*.rpm"))) > 0:
-        return "repo not empty, aborting", 409
-    try:
-        shutil.rmtree(repopath)
-    except OSError as e:
-        if e.errno == 39:
-            abort(409)
-        raise
-    return ('', 204)
-
-
-def create_repo_metadata(reponame):
-    subprocess.check_call([app.config['CREATEREPO_BIN'], os.path.join(app.config['REPOS_FOLDER'], reponame)])
+    return app.config['BACKEND'].remove_repo(reponame)
 
 
 @app.route('/admin/repos/<reponame>', methods=['POST'])
 def upload_rpm(reponame):
     file = request.files['rpm']
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        complete_filename = os.path.join(app.config['REPOS_FOLDER'], reponame, filename)
-        if os.path.exists(complete_filename):
-            return "%s already exists" % file.filename, 409
-        try:
-            file.save(complete_filename)
-            create_repo_metadata(reponame)
-            return ('', 201)
-        except IOError as e:
-            if e.errno == 2:
-                abort(404)
+        return app.config['BACKEND'].upload_rpm(reponame, file)
     return "%s not a valid rpm" % file.filename, 400
 
 
 @app.route('/admin/repos/<reponame>/<rpmname>', methods=['POST', 'STAGE'])
 def stage_rpm(reponame, rpmname):
-    source_rpmname = os.path.join(app.config['REPOS_FOLDER'], reponame, rpmname)
-    if not os.path.exists(source_rpmname):
-        return "source rpm '%s/%s' does not exist" % (reponame, rpmname), 404
+    backend = app.config['BACKEND']
+    if not backend.exists(reponame, rpmname):
+        return "rpm '%s/%s' does not exist" % (reponame, rpmname), 404
     target_reponame = request.form.get('target-repo')
-    if not os.path.exists(os.path.join(app.config['REPOS_FOLDER'], target_reponame)):
+    if not backend.exists(target_reponame):
         return "target repo '%s' does not exist" % target_reponame, 404
-    target_rpmname = os.path.join(app.config['REPOS_FOLDER'], target_reponame, rpmname)
-    if os.path.exists(target_rpmname):
+    if backend.exists(target_reponame, rpmname):
         abort(409)
-    shutil.move(source_rpmname, target_rpmname)
-    create_repo_metadata(reponame)
-    create_repo_metadata(target_reponame)
-    return '', 201
+    return backend.stage(reponame, rpmname, target_reponame)
 
 
 @app.route('/admin/repos/<reponame>/<rpmname>', methods=['DELETE'])
 def remove_rpm(reponame, rpmname):
-    filename = os.path.join(app.config['REPOS_FOLDER'], reponame, rpmname)
-    try:
-        os.unlink(filename)
-        create_repo_metadata(reponame)
-    except OSError as e:
-        if e.errno == 2:
-            abort(404)
-        raise
-    return ('', 204)
+    return app.config['BACKEND'].remove_rpm(reponame, rpmname)
 
 
 if __name__ == '__main__':
