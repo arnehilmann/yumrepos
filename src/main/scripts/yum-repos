@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-import glob
+import fnmatch
 import json
 import os
 
-from flask import Flask, request, abort, send_file
+from flask import Flask, request, abort, send_file, redirect
 
 from yumrepos import FsBackend
 
@@ -27,33 +27,21 @@ def allowed_file(filename):
         filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
 
-if app.config['SERVE_STATIC_FILES']:
-    @app.route('/repos', methods=['GET'])
-    def get_repos():
-        return json.dumps(os.listdir(REPOS_FOLDER), indent=4)
-
-    @app.route('/repos/<reponame>', methods=['GET'])
-    def get_repo(reponame):
-        return json.dumps(glob.glob(os.path.join(REPOS_FOLDER, reponame, '*.rpm')), indent=4)
-
-    @app.route('/repos/<reponame>/<rpmname>', methods=['GET'])
-    def get_rpm(reponame, rpmname):
-        filename = os.path.join(REPOS_FOLDER, reponame, rpmname)
-        return send_file(filename)
-
-    @app.route('/repos/<reponame>/repodata/<filename>')
-    def serve_repodata(reponame, filename):
-        static_filename = os.path.join(REPOS_FOLDER, reponame, 'repodata', filename)
-        return send_file(static_filename)
-
-
 @app.route('/admin/repos/<reponame>', methods=['PUT'])
 def create_repo(reponame):
+    if 'link_to' in request.args:
+        link_to = request.args['link_to']
+        if not app.config['BACKEND'].exists(link_to):
+            return ('%s not a repo' % link_to, 404)
+        return app.config['BACKEND'].create_repo_link(reponame, link_to)
     return app.config['BACKEND'].create_repo(reponame)
 
 
 @app.route('/admin/repos/<reponame>', methods=['DELETE'])
 def remove_repo(reponame):
+    backend = app.config['BACKEND']
+    if backend.is_link(reponame):
+        return app.config['BACKEND'].remove_repo_link(reponame)
     return app.config['BACKEND'].remove_repo(reponame)
 
 
@@ -81,6 +69,38 @@ def stage_rpm(reponame, rpmname):
 @app.route('/admin/repos/<reponame>/<rpmname>', methods=['DELETE'])
 def remove_rpm(reponame, rpmname):
     return app.config['BACKEND'].remove_rpm(reponame, rpmname)
+
+
+@app.route('/admin/repos/<reponame>', methods=['GET'])
+def get_repo_info(reponame):
+    if 'is_link' in request.args:
+        return app.config['BACKEND'].is_link(reponame)
+    abort(400)
+
+
+if app.config['SERVE_STATIC_FILES']:
+    @app.route('/repos', methods=['GET'])
+    def get_repos():
+        return json.dumps(os.listdir(REPOS_FOLDER), indent=4)
+
+    @app.route('/repos/<reponame>', methods=['GET'])
+    def get_repo(reponame):
+        return json.dumps([file for file in os.listdir(os.path.join(REPOS_FOLDER, reponame))
+                           if fnmatch.fnmatch(file, '*.rpm')], indent=4)
+
+    @app.route('/strange/url/repos/<reponame>/<rpmname>', methods=['GET'])
+    def get_rpm(reponame, rpmname):
+        filename = os.path.join(REPOS_FOLDER, reponame, rpmname)
+        return send_file(filename)
+
+    @app.route('/repos/<reponame>/<rpmname>', methods=['GET'])
+    def get_rpm_redirected(reponame, rpmname):
+        return redirect('/strange/url/repos/%s/%s' % (reponame, rpmname))
+
+    @app.route('/repos/<reponame>/repodata/<filename>')
+    def serve_repodata(reponame, filename):
+        static_filename = os.path.join(REPOS_FOLDER, reponame, 'repodata', filename)
+        return send_file(static_filename)
 
 
 if __name__ == '__main__':

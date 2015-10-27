@@ -30,6 +30,12 @@ class FsBackend(object):
         self.create_repo_metadata(reponame)
         return ('', 201)
 
+    def create_repo_link(self, reponame, link_to):
+        if self.exists(reponame):
+            os.remove(self._to_path(reponame))
+        os.symlink(link_to, self._to_path(reponame))
+        return ('', 201)
+
     def remove_repo(self, reponame):
         repopath = self._to_path(reponame)
         if not os.path.exists(repopath):
@@ -42,6 +48,12 @@ class FsBackend(object):
             if e.errno == 39:
                 return ('', 409)
             raise
+        return ('', 204)
+
+    def remove_repo_link(self, reponame):
+        if not self.exists(reponame):
+            return ('', 404)
+        os.unlink(self._to_path(reponame))
         return ('', 204)
 
     def upload_rpm(self, reponame, file):
@@ -57,8 +69,10 @@ class FsBackend(object):
             if e.errno == 2:
                 return ('', 404)
 
-    def _to_path(self, reponame, rpmname=''):
-        return os.path.join(self.repos_folder, reponame, rpmname)
+    def _to_path(self, reponame, rpmname=None):
+        if rpmname:
+            return os.path.join(self.repos_folder, reponame, rpmname)
+        return os.path.join(self.repos_folder, reponame)
 
     def exists(self, reponame, rpmname=''):
         return os.path.exists(self._to_path(reponame, rpmname))
@@ -79,3 +93,8 @@ class FsBackend(object):
                 return ('', 404)
             raise
         return ('', 204)
+
+    def is_link(self, reponame):
+        if os.path.islink(self._to_path(reponame)):
+            return ('true', 200)
+        return ('false', 200)
