@@ -19,7 +19,10 @@ class FsBackend(object):
                 raise
 
     def create_repo_metadata(self, reponame):
-        subprocess.check_call([self.createrepo_bin, os.path.join(self.repos_folder, reponame)])
+        with open(os.devnull, "w") as fnull:
+            subprocess.check_call([self.createrepo_bin, os.path.join(self.repos_folder, reponame)],
+                                  stdout=fnull,
+                                  stderr=fnull)
 
     def create_repo(self, reponame):
         try:
