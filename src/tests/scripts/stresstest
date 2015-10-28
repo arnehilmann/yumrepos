@@ -1,0 +1,54 @@
+#!/bin/bash
+set -e -E -u -C -o pipefail
+
+HOST=http://localhost:8080
+ADMIN_ENDPOINT=$HOST/admin/repos
+OUT=out/stresstest
+NR_RPMS=40
+NR_REPOS=10
+
+create_repo() {
+    curl -X PUT $ADMIN_ENDPOINT/$1 -i -s
+}
+
+echo "generate empty rpms"
+SECONDS=0
+rm -rf $OUT
+mkdir -p $OUT
+for I in $(seq $NR_RPMS); do
+    (
+        rm -f $OUT/foo-$I.spec
+        sed "s/Version: .*/Version: $I/" res/foo.spec > $OUT/foo-$I.spec
+        RPM_FILE=$(rpmbuild --define "_topdir $OUT/build" -bb $OUT/foo-$I.spec 2> /dev/null | sed -n "s/^Wrote: //;T;p")
+        mv $RPM_FILE $OUT
+        rm $OUT/foo-$I.spec
+    ) &
+done
+wait
+rm -rf $OUT/build
+ls -1 $OUT/*.rpm | wc -l | grep $NR_RPMS
+echo duration: $SECONDS seconds
+
+
+echo "stress yum repos"
+SECONDS=0
+rm -rf repos/stressrepo*
+for I in $(seq -w $NR_REPOS); do
+    (
+        echo "create stressrepo$I"
+        create_repo stressrepo$I | grep "201 CREATED" > /dev/null
+        for RPM in $OUT/*.rpm; do
+            curl -X POST $ADMIN_ENDPOINT/stressrepo$I -F rpm=@$RPM &
+            sleep .001
+        done
+        wait
+    ) &
+    sleep 1
+done
+wait
+ls -1d repos/stressrepo* | wc -l | grep $NR_REPOS
+echo duration: $SECONDS seconds
+
+truncate -s 100MB $OUT/bar
+
+echo "SUCCESS"
