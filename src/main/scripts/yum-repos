@@ -53,17 +53,16 @@ def upload_rpm(reponame):
     return "%s not a valid rpm" % file.filename, 400
 
 
-@app.route('/admin/repos/<reponame>/<rpmname>', methods=['POST', 'STAGE'])
-def stage_rpm(reponame, rpmname):
+@app.route('/admin/repos/<reponame>/<rpmname>/stageto/<targetreponame>', methods=['PUT', 'STAGE'])
+def stage_rpm(reponame, rpmname, targetreponame):
     backend = app.config['BACKEND']
     if not backend.exists(reponame, rpmname):
         return "rpm '%s/%s' does not exist" % (reponame, rpmname), 404
-    target_reponame = request.form.get('target-repo')
-    if not backend.exists(target_reponame):
-        return "target repo '%s' does not exist" % target_reponame, 404
-    if backend.exists(target_reponame, rpmname):
+    if not backend.exists(targetreponame):
+        return "target repo '%s' does not exist" % targetreponame, 404
+    if backend.exists(targetreponame, rpmname):
         abort(409)
-    return backend.stage(reponame, rpmname, target_reponame)
+    return backend.stage(reponame, rpmname, targetreponame)
 
 
 @app.route('/admin/repos/<reponame>/<rpmname>', methods=['DELETE'])

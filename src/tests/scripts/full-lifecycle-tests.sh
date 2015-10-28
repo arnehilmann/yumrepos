@@ -61,7 +61,7 @@ if $TEST_YUM; then
     echo "rpm found in repo: " $($YUM info foo | grep "testrepo1")
 fi
 
-curl -X STAGE -d target-repo=testrepo2 $HOST/admin/$TESTREPO1/$TESTRPM
+curl -X STAGE $HOST/admin/$TESTREPO1/$TESTRPM/stageto/testrepo2
 
 if $TEST_YUM; then
     echo "search for rpm via yum"
