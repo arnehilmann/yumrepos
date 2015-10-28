@@ -71,10 +71,19 @@ def remove_rpm(reponame, rpmname):
     return app.config['BACKEND'].remove_rpm(reponame, rpmname)
 
 
+@app.route('/admin/repos/<reponame>/is_link', methods=['GET'])
+def is_repo_a_link(reponame):
+    if app.config['BACKEND'].is_link(reponame):
+        return ('true', 200)
+    return ('false', 200)
+
+
 @app.route('/admin/repos/<reponame>', methods=['GET'])
 def get_repo_info(reponame):
     if 'is_link' in request.args:
-        return app.config['BACKEND'].is_link(reponame)
+        if app.config['BACKEND'].is_link(reponame):
+            return ('true', 200)
+        return ('false', 200)
     abort(400)
 
 

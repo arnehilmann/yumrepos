@@ -95,6 +95,4 @@ class FsBackend(object):
         return ('', 204)
 
     def is_link(self, reponame):
-        if os.path.islink(self._to_path(reponame)):
-            return ('true', 200)
-        return ('false', 200)
+        return os.path.islink(self._to_path(reponame))
