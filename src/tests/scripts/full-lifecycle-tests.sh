@@ -24,40 +24,35 @@ echo "check if yum-repo service is up"
 curl $HOST/repos           -i -s | grep "200 OK"
 
 echo "try to upload rpm to non-existant repo"
-curl -F rpm=@res/$TESTRPM \
-    $HOST/admin/$TESTREPO1  -i -s | grep "404 NOT FOUND"
+curl -F rpm=@res/$TESTRPM $HOST/admin/$TESTREPO1  -i -s | grep "404 NOT FOUND"
 
 echo "create $TESTREPO1"
-curl -X PUT \
-    $HOST/admin/$TESTREPO1  -i -s | grep "201 CREATED"
+curl -X PUT $HOST/admin/$TESTREPO1  -i -s | grep "201 CREATED"
 
 echo "check created repo"
 curl $HOST/$TESTREPO1       -i -s | grep "200 OK"
 
 echo "upload rpm to $TESTREPO1"
-curl -F rpm=@res/$TESTRPM \
-    $HOST/admin/$TESTREPO1  -i -s | grep "201 CREATED"
+curl -F rpm=@res/$TESTRPM $HOST/admin/$TESTREPO1  -i -s | grep "201 CREATED"
 
 echo "check rpm and metadata"
 [[ -e $TESTREPO1/$TESTRPM ]]
 [[ -d $TESTREPO1/repodata ]]
 
 echo "create $TESTREPO2"
-curl -X PUT \
-    $HOST/admin/$TESTREPO2 -i -s | grep "201 CREATED"
+curl -X PUT $HOST/admin/$TESTREPO2 -i -s | grep "201 CREATED"
 
 echo "check metadata"
 [[ -d $TESTREPO2/repodata ]]
 
 echo "create empty repo3"
-curl -X PUT \
-    $HOST/admin/$TESTREPO3 -i -s | grep "201 CREATED"
+curl -X PUT $HOST/admin/$TESTREPO3 -i -s | grep "201 CREATED"
 
 if $TEST_YUM; then
     echo "search for rpm via yum"
     $YUM clean all
     $YUM repolist
-    $YUM search foo | grep "foo.x86_64"
+    $YUM search foo 2> /dev/null | grep "foo.x86_64"
     echo "rpm found in repo: " $($YUM info foo | grep "testrepo1")
 fi
 
@@ -67,7 +62,7 @@ if $TEST_YUM; then
     echo "search for rpm via yum"
     $YUM clean all
     $YUM repolist
-    $YUM search foo | grep "foo.x86_64"
+    $YUM search foo 2> /dev/null | grep "foo.x86_64"
     echo "rpm found in repo: " $($YUM info foo | grep "testrepo2")
 fi
 
