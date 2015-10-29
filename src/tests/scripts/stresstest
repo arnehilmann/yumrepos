@@ -30,25 +30,83 @@ ls -1 $OUT/*.rpm | wc -l | grep $NR_RPMS
 echo duration: $SECONDS seconds
 
 
-echo "stress yum repos"
+echo "generate big rpms"
+SECONDS=0
+truncate -s 100MB $OUT/bar
+echo duration: $SECONDS seconds
+
+
+echo "create yum repos and yum.conf"
 SECONDS=0
 rm -rf repos/stressrepo*
 for I in $(seq -w $NR_REPOS); do
-    (
-        echo "create stressrepo$I"
-        create_repo stressrepo$I | grep "201 CREATED" > /dev/null
-        for RPM in $OUT/*.rpm; do
-            curl -X POST $ADMIN_ENDPOINT/stressrepo$I -F rpm=@$RPM &
-            sleep .001
-        done
-        wait
-    ) &
-    sleep 1
+    echo "create stressrepo$I"
+    create_repo stressrepo$I | grep "201 CREATED" > /dev/null &
 done
 wait
 ls -1d repos/stressrepo* | wc -l | grep $NR_REPOS
+
+rm -f $OUT/yum.conf
+exec 3>&1 >> $OUT/yum.conf
+
+cat <<'EOF'
+[main]
+cachedir=out/cache/yum/$basearch/$releasever
+keepcache=0
+debuglevel=2
+logfile=out/log/yum.log
+exactarch=1
+obsoletes=1
+gpgcheck=1
+plugins=1
+distroverpkg=centos-release
+EOF
+
+for I in $(seq -w $NR_REPOS); do
+    REPO=stressrepo$I
+    echo
+    echo "[$REPO]"
+    echo "name=the $REPO"
+    echo "baseurl=http://localhost:8080/repos/$REPO"
+    echo "gpgcheck=0"
+    echo "enabled=1"
+done
+exec 1>&3
 echo duration: $SECONDS seconds
 
-truncate -s 100MB $OUT/bar
+
+echo "stress yum repos"
+SECONDS=0
+(
+    for I in $(seq -w $NR_REPOS); do
+        (
+            for RPM in $OUT/*.rpm; do
+                curl -X POST $ADMIN_ENDPOINT/stressrepo$I -F rpm=@$RPM -i -s | grep "201 CONTENT CREATED" &
+                sleep .01
+            done
+            wait
+        ) &
+        sleep .1
+    done
+    wait
+    ls -1d repos/stressrepo* | wc -l | grep $NR_REPOS
+) &
+WORKER=$!
+echo "worker: $WORKER"
+(
+    for I in $(seq 10); do
+        echo "fetch repolist via yum, try $I"
+        yum -c $OUT/yum.conf clean all
+        yum -c $OUT/yum.conf repolist
+    done
+) &
+OBSERVER=$!
+echo "observer: $OBSERVER"
+wait $WORKER
+kill $OBSERVER || :
+sleep 1
+echo duration: $SECONDS seconds
+
 
 echo "SUCCESS"
+exit
