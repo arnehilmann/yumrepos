@@ -1,8 +1,6 @@
-import fnmatch
-import json
 import os
 
-from flask import Flask, request, abort, send_file, redirect
+from flask import Flask, request, abort
 
 from fs_backend import FsBackend
 
@@ -11,7 +9,6 @@ app = Flask(__name__)
 app.debug = False
 
 app.config['ALLOWED_EXTENSIONS'] = set(['rpm'])
-app.config['SERVE_STATIC_FILES'] = False
 
 REPOS_FOLDER = os.path.abspath('/srv/http/repos')
 app.config['BACKEND'] = FsBackend(REPOS_FOLDER, 'createrepo_c')
@@ -77,37 +74,3 @@ def is_repo_a_link(reponame):
     if app.config['BACKEND'].is_link(reponame):
         return ('true', 200)
     return ('false', 200)
-
-
-@app.route('/repos/<reponame>', methods=['GET'])
-def get_repo_info(reponame):
-    if 'is_link' in request.args:
-        if app.config['BACKEND'].is_link(reponame):
-            return ('true', 200)
-        return ('false', 200)
-    abort(400)
-
-
-if app.config['SERVE_STATIC_FILES']:
-    @app.route('/', methods=['GET'])
-    def get_repos():
-        return json.dumps(os.listdir(REPOS_FOLDER), indent=4)
-
-    @app.route('/<reponame>', methods=['GET'])
-    def get_repo(reponame):
-        return json.dumps([file for file in os.listdir(os.path.join(REPOS_FOLDER, reponame))
-                           if fnmatch.fnmatch(file, '*.rpm')], indent=4)
-
-    @app.route('/strange/url/repos/<reponame>/<rpmname>', methods=['GET'])
-    def get_rpm(reponame, rpmname):
-        filename = os.path.join(REPOS_FOLDER, reponame, rpmname)
-        return send_file(filename)
-
-    @app.route('/<reponame>/<rpmname>', methods=['GET'])
-    def get_rpm_redirected(reponame, rpmname):
-        return redirect('/strange/url/repos/%s/%s' % (reponame, rpmname))
-
-    @app.route('/<reponame>/repodata/<filename>')
-    def serve_repodata(reponame, filename):
-        static_filename = os.path.join(REPOS_FOLDER, reponame, 'repodata', filename)
-        return send_file(static_filename)
