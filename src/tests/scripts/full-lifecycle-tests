@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e -E -u -o pipefail -C
 
-set -x
+#set -x
 
 TESTREPO1=repos/testrepo1
 TESTREPO2=repos/testrepo2
@@ -18,6 +18,8 @@ if yum --version &> /dev/null; then
     YUM="yum -c res/yum.conf"
     echo "'yum' command found"
 fi
+
+trap "echo; echo; echo AN ERROR OCCURED; echo; exit" ERR
 
 echo "preparing test repos"
 $CURL -X DELETERECURSIVLY $HOST/admin/$TESTREPO1 -s &> /dev/null
@@ -97,5 +99,8 @@ $CURL -X DELETE $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "remove empty repo $TESTREPO2"
 $CURL -X DELETE $HOST/admin/$TESTREPO2  -i -s | $CHECK_STATE "204 NO CONTENT"
+
+echo "remove repo link $TESTREPO3"
+$CURL -X DELETE $HOST/admin/$TESTREPO3  -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "SUCCESS"

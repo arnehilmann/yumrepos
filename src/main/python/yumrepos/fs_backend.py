@@ -58,7 +58,7 @@ class FsBackend(object):
     def remove_repo_link(self, reponame):
         if not self.exists(reponame):
             return ('', 404)
-        os.unlink(self._to_path(reponame))
+        os.remove(self._to_path(reponame))
         return ('', 204)
 
     def upload_rpm(self, reponame, file):
@@ -80,7 +80,8 @@ class FsBackend(object):
         return os.path.join(self.repos_folder, reponame)
 
     def exists(self, reponame, rpmname=''):
-        return os.path.exists(self._to_path(reponame, rpmname))
+        path = self._to_path(reponame, rpmname)
+        return os.path.islink(path) or os.path.exists(path)
 
     def stage(self, source, rpm, target):
         shutil.move(self._to_path(source, rpm), self._to_path(target, rpm))
