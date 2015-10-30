@@ -39,12 +39,13 @@ class FsBackend(object):
         os.symlink(link_to, self._to_path(reponame))
         return ('', 201)
 
-    def remove_repo(self, reponame):
+    def remove_repo(self, reponame, recursivly=False):
         repopath = self._to_path(reponame)
         if not os.path.exists(repopath):
             return ('', 404)
-        if len(glob.glob(os.path.join(repopath, "*.rpm"))) > 0:
-            return "repo not empty, aborting", 409
+        if not recursivly:
+            if len(glob.glob(os.path.join(repopath, "*.rpm"))) > 0:
+                return "repo not empty, aborting", 409
         try:
             shutil.rmtree(repopath)
         except OSError as e:
