@@ -9,9 +9,8 @@ app = Flask(__name__)
 app.debug = False
 
 app.config['ALLOWED_EXTENSIONS'] = set(['rpm'])
-
-REPOS_FOLDER = os.path.abspath('/srv/http/repos')
-app.config['BACKEND'] = FsBackend(REPOS_FOLDER, 'createrepo_c')
+REPOS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "repos"))
+app.config['BACKEND'] = FsBackend(REPOS_DIR, 'createrepo_c')
 
 
 @app.before_first_request

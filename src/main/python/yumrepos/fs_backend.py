@@ -28,6 +28,7 @@ class FsBackend(object):
         try:
             os.mkdir(self._to_path(reponame))
         except OSError as e:
+            print e
             if e.errno != 17:
                 raise
         self.create_repo_metadata(reponame)

@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e -E -u -o pipefail -C
 
+set -x
+
 TESTREPO1=repos/testrepo1
 TESTREPO2=repos/testrepo2
 TESTREPO3=repos/testrepo3
@@ -22,8 +24,6 @@ $CURL -X DELETERECURSIVLY $HOST/admin/$TESTREPO1 -s &> /dev/null
 $CURL -X DELETERECURSIVLY $HOST/admin/$TESTREPO2 -s &> /dev/null
 $CURL -X DELETERECURSIVLY $HOST/admin/$TESTREPO3 -s &> /dev/null
 
-
-set -x
 
 echo "check if yum-repo service is up"
 $CURL $HOST/repos/           -i -s | $CHECK_STATE "200 OK"
