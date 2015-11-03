@@ -10,40 +10,33 @@ from fs_backend import FsBackend
 app = Flask(__name__)
 app.config['ALLOWED_EXTENSIONS'] = set(['rpm'])
 
-REPOS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "repos"))
-print "repos dir: %s" % REPOS_DIR
-backend = FsBackend(REPOS_DIR, 'createrepo_c')
-backend.init_env()
 
-
-def add_repos_routes():
+def add_repos_routes(repos_dir):
     repos = Blueprint('repos', __name__)
 
     @repos.route('/', methods=['GET'])
     def get_repos():
-        return json.dumps(os.listdir(REPOS_DIR), indent=4)
+        return json.dumps(os.listdir(repos_dir), indent=4)
 
     @repos.route('/<reponame>', methods=['GET'])
     def get_repo(reponame):
-        return json.dumps([file for file in os.listdir(os.path.join(REPOS_DIR, reponame))
+        return json.dumps([file for file in os.listdir(os.path.join(repos_dir, reponame))
                            if fnmatch(file, '*.rpm')], indent=4)
 
     @repos.route('/<reponame>/<rpmname>', methods=['GET'])
     def get_rpm_redirected(reponame, rpmname):
-        filename = os.path.join(REPOS_DIR, reponame, rpmname)
+        filename = os.path.join(repos_dir, reponame, rpmname)
         return send_file(filename)
 
     @repos.route('/<reponame>/repodata/<filename>')
     def serve_repodata(reponame, filename):
-        static_filename = os.path.join(REPOS_DIR, reponame, 'repodata', filename)
+        static_filename = os.path.join(repos_dir, reponame, 'repodata', filename)
         return send_file(static_filename)
 
     app.register_blueprint(repos, url_prefix='/repos')
 
-add_repos_routes()
 
-
-def add_admin_routes():
+def add_admin_routes(backend):
     admin = Blueprint('admin', __name__)
 
     def allowed_file(filename):
@@ -109,4 +102,11 @@ def add_admin_routes():
 
     app.register_blueprint(admin, url_prefix='/admin')
 
-add_admin_routes()
+
+def configure(repos_dir):
+    print "repos dir: %s" % repos_dir
+    backend = FsBackend(repos_dir, 'createrepo_c')
+    backend.init_env()
+
+    add_repos_routes(repos_dir)
+    add_admin_routes(backend)

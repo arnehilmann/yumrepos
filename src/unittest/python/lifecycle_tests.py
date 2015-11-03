@@ -2,6 +2,7 @@
 
 import unittest
 from yumrepos import app as application
+from yumrepos import app_configure
 import requests
 import subprocess
 import os
@@ -16,7 +17,8 @@ class Test(unittest.TestCase):
 
     def test(self):
         def testrunner():
-            application.run("0.0.0.0", self.PORT, debug=False)
+            app_configure("/tmp/repos")
+            application.run("0.0.0.0", self.PORT)
 
         t = threading.Thread(target=testrunner)
         t.setDaemon(True)
