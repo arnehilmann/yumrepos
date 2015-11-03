@@ -6,4 +6,4 @@ python:
 install:
   - pip install pybuilder
   - pyb install_dependencies
-script: "pyb"
+script: "pyb -X"

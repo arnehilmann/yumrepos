@@ -49,6 +49,7 @@ def add_admin_routes(backend):
 
     @admin.route('/repos/<reponame>', methods=['PUT'])
     def create_repo(reponame):
+        print "create_repo %s" % reponame
         if 'link_to' in request.args:
             link_to = request.args['link_to']
             if not backend.exists(link_to):
