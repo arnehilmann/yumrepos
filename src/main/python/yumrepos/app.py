@@ -106,7 +106,7 @@ def add_admin_routes(backend):
 
 def configure(repos_dir):
     print "repos dir: %s" % repos_dir
-    backend = FsBackend(repos_dir, 'createrepo_c')
+    backend = FsBackend(repos_dir, 'createrepo')
     backend.init_env()
 
     add_repos_routes(repos_dir)
