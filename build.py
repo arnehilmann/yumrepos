@@ -11,7 +11,7 @@ use_plugin("python.distutils")
 
 name = "yum-repos"
 summary = "yum-repos: simple yum repositories with minimal rest api"
-url = ""
+url = "https://github.com/arnehilmann/yum-repos"
 version = "0.1"
 
 authors = [Author('Arne Hilmann', 'arne.hilmann@gmail.com')]
