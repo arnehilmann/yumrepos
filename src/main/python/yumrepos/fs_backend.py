@@ -2,6 +2,7 @@ import glob
 import os
 import shutil
 import subprocess
+import sys
 
 from werkzeug import secure_filename
 
@@ -26,12 +27,16 @@ class FsBackend(object):
 
     def create_repo(self, reponame):
         try:
+            print >> sys.stderr, "trying to create_repo %s" % self._to_path(reponame)
             os.mkdir(self._to_path(reponame))
         except OSError as e:
             print e
+            print >> sys.stderr, e
             if e.errno != 17:
                 raise
+        print >> sys.stderr, "created!"
         self.create_repo_metadata(reponame)
+        print >> sys.stderr, "metadata!"
         return ('', 201)
 
     def create_repo_link(self, reponame, link_to):
