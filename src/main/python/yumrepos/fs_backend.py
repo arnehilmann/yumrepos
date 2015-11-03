@@ -102,3 +102,12 @@ class FsBackend(object):
 
     def is_link(self, reponame):
         return os.path.islink(self._to_path(reponame))
+
+    def get_rpm_info(self, reponame, rpmname):
+        filename = self._to_path(reponame, rpmname)
+        try:
+            output = subprocess.check_output(["rpm", "-qpi", filename])
+        except Exception as e:
+            print e
+            raise
+        return output
