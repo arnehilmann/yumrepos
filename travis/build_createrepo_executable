@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e -E -u
+
+echo "SEARCHPATH: $PATH"
+
+git clone https://github.com/rpm-software-management/createrepo_c.git
+cd  createrepo_c
+mkdir build
+cd build
+cmake ..
+make
+
+mkdir $HOME/bin
+cp src/createrepo_c $HOME/bin

@@ -7,8 +7,9 @@ addons:
     packages:
     - rpm
     - yum
-    - createrepo
+    - createrepo_c
 install:
   - pip install pybuilder
   - pyb install_dependencies
+  - travis/build_createrepo_executable
 script: "pyb -X"
