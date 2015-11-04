@@ -10,3 +10,10 @@ install:
 script: "pyb -X"
 after_success:
   - coveralls --verbose
+deploy:
+  provider: releases
+  api_key: "1e03e2278bbcc7296afb8833465047b95c1a9d0b"
+  file: "target/dist/yum-repos-*/dist/yum-repos-*.noarch.rpm"
+  skip_cleanup: true
+  on:
+    tags: true
