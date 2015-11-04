@@ -1,16 +1,9 @@
-sudo: False
+sudo: required
 language: python
 python:
   - "2.7"
-addons:
-  apt:
-    packages:
-    - rpm
-    - yum
-    - createrepo_c
 install:
+  - sudo apt-get install rpm yum createrepo
   - pip install pybuilder
   - pyb install_dependencies
-  - mkdir $HOME/bin && cp travis/* $HOME/bin
-  - echo $PATH
 script: "pyb -X"
