@@ -11,5 +11,6 @@ addons:
 install:
   - pip install pybuilder
   - pyb install_dependencies
-  - travis/build_createrepo_executable
+  - mkdir $HOME/bin && cp travis/* $HOME/bin
+  - echo $PATH
 script: "pyb -X"
