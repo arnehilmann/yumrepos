@@ -4,6 +4,7 @@ python:
   - "2.7"
 install:
   - sudo apt-get install rpm yum createrepo
+  - pip install coveralls
   - pip install pybuilder
   - pyb install_dependencies
 script: "pyb -X"
