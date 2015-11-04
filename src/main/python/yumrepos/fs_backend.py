@@ -1,3 +1,5 @@
+import distutils
+from fnmatch import fnmatch
 import glob
 import os
 import shutil
@@ -8,11 +10,14 @@ from werkzeug import secure_filename
 
 
 class FsBackend(object):
-    def __init__(self, repos_folder, createrepo_bin):
-        self.repos_folder = repos_folder
-        self.createrepo_bin = createrepo_bin
+    def __init__(self, repos_folder, createrepo_bins=['createrepo_c', 'createrepo']):
+        self.repos_folder = os.path.abspath(repos_folder)
+        self.createrepo_bin = 'touch'   # simplest fallback
+        for createrepo_bin in createrepo_bins:
+            if distutils.spawn.find_executable(createrepo_bin):
+                self.createrepo_bin = createrepo_bin
+                break
 
-    def init_env(self):
         try:
             os.mkdir(self.repos_folder)
         except OSError as e:
@@ -116,3 +121,13 @@ class FsBackend(object):
             print e
             raise
         return output
+
+    def list_repos(self):
+        return os.listdir(self.repos_folder)
+
+    def list_rpms(self, reponame):
+        return [file for file in os.listdir(self._to_path(reponame))
+                if fnmatch(file, '*.rpm')]
+
+    def get_filename(self, reponame, path):
+        return self._to_path(reponame, path)

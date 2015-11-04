@@ -2,7 +2,7 @@
 
 import unittest
 from yumrepos import app as application
-from yumrepos import app_configure
+from yumrepos import app_configure, FsBackend
 import requests
 import subprocess
 import os
@@ -17,7 +17,7 @@ class Test(unittest.TestCase):
 
     def test(self):
         def testrunner():
-            app_configure("/tmp")
+            app_configure(FsBackend('/tmp'), serve_static=True)
             application.run("0.0.0.0", self.PORT)
 
         t = threading.Thread(target=testrunner)

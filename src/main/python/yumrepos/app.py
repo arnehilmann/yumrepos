@@ -1,37 +1,26 @@
-import os
-from fnmatch import fnmatch
 import json
 
 from flask import Flask, request, abort, Blueprint, send_file
-
-from fs_backend import FsBackend
 
 
 app = Flask(__name__)
 app.config['ALLOWED_EXTENSIONS'] = set(['rpm'])
 
 
-def add_repos_routes(repos_dir):
+def add_repos_routes(backend):
     repos = Blueprint('repos', __name__)
 
     @repos.route('/', methods=['GET'])
-    def get_repos():
-        return json.dumps(os.listdir(repos_dir), indent=4)
+    def list_repos():
+        return json.dumps(backend.list_repos(), indent=4)
 
     @repos.route('/<reponame>', methods=['GET'])
-    def get_repo(reponame):
-        return json.dumps([file for file in os.listdir(os.path.join(repos_dir, reponame))
-                           if fnmatch(file, '*.rpm')], indent=4)
+    def list_rpms(reponame):
+        return json.dumps(backend.list_rpms(reponame), indent=4)
 
-    @repos.route('/<reponame>/<rpmname>', methods=['GET'])
-    def get_rpm_redirected(reponame, rpmname):
-        filename = os.path.join(repos_dir, reponame, rpmname)
-        return send_file(filename)
-
-    @repos.route('/<reponame>/repodata/<filename>')
-    def serve_repodata(reponame, filename):
-        static_filename = os.path.join(repos_dir, reponame, 'repodata', filename)
-        return send_file(static_filename)
+    @repos.route('/<reponame>/<path:path>', methods=['GET'])
+    def get_filename(reponame, path):
+        return send_file(backend.get_filename(reponame, path))
 
     app.register_blueprint(repos, url_prefix='/repos')
 
@@ -104,10 +93,7 @@ def add_admin_routes(backend):
     app.register_blueprint(admin, url_prefix='/admin')
 
 
-def configure(repos_dir):
-    print "repos dir: %s" % repos_dir
-    backend = FsBackend(repos_dir, 'createrepo')
-    backend.init_env()
-
-    add_repos_routes(repos_dir)
+def configure(backend, serve_static=False):
     add_admin_routes(backend)
+    if serve_static:
+        add_repos_routes(backend)
