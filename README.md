@@ -1,7 +1,7 @@
 # yum-repos
 
 [![Build Status](https://api.travis-ci.org/arnehilmann/yum-repos.svg?branch=master)](https://travis-ci.org/arnehilmann/yum-repos)
-[![Coverage Status](https://coveralls.io/repos/arnehilmann/yum-repos/badge.svg)](https://coveralls.io/r/arnehilmann/yum-repos)
+[![Coverage Status](https://coveralls.io/repos/arnehilmann/yum-repos/badge.svg?branch=master&service=github)](https://coveralls.io/github/arnehilmann/yum-repos?branch=master)
 
 minimal yum repo server, with rest API and filesystem backend
 
