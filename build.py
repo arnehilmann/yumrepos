@@ -7,12 +7,13 @@ use_plugin("python.install_dependencies")
 use_plugin("python.flake8")
 use_plugin("python.coverage")
 use_plugin("python.distutils")
-
+use_plugin('copy_resources')
+use_plugin('filter_resources')
 
 name = "yum-repos"
 summary = "yum-repos: simple yum repositories with minimal rest api"
 url = "https://github.com/arnehilmann/yum-repos"
-version = "0.1"
+version = "0.5"
 
 authors = [Author('Arne Hilmann', 'arne.hilmann@gmail.com')]
 
@@ -33,5 +34,8 @@ def set_properties(project):
 
     project.depends_on("flask")
 
-    project.rpm_release = 0
+    project.rpm_release = '0'
     project.get_property('distutils_commands').append('bdist_rpm')
+    project.set_property('copy_resources_target', '$dir_dist')
+    project.get_property('copy_resources_glob').extend(['setup.cfg'])
+    project.get_property('filter_resources_glob').extend(['**/setup.cfg'])
