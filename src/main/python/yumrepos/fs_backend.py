@@ -1,4 +1,4 @@
-import distutils
+from distutils.spawn import find_executable
 from fnmatch import fnmatch
 import glob
 import os
@@ -14,7 +14,7 @@ class FsBackend(object):
         self.repos_folder = os.path.abspath(repos_folder)
         self.createrepo_bin = 'touch'   # simplest fallback
         for createrepo_bin in createrepo_bins:
-            if distutils.spawn.find_executable(createrepo_bin):
+            if find_executable(createrepo_bin):
                 self.createrepo_bin = createrepo_bin
                 break
 
