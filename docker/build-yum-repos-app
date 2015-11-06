@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e -E -u
+
+TOPDIR=$(dirname $0)/..
+
+cp $TOPDIR/docker/docker-yum-repos-app/Dockerfile $TOPDIR/target/dist/yum-repos-*/dist/
+cd $TOPDIR/target/dist/yum-repos-*/dist/
+docker build -t yum-repos-app .

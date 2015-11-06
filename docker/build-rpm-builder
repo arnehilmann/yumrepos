@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e -E -u
+
+cd $(dirname $0)
+for TARGET in $(ls -1d build-on-*); do
+    docker build -t $TARGET $TARGET
+done
+
+docker images | grep build-on-
