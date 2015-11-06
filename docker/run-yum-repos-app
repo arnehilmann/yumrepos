@@ -1,12 +1,1 @@
-FROM centos
-
-RUN yum install -y /rpms/yum-repos-*.rpm
-
-WORKDIR /repos
-
-RUN chown -R $(stat %u:%g /repos) /repos
-RUN chmod -R g+s /repos
-
-EXPOSE 8080
-
-CMD ["yum-repos"]
+docker run -it -p 8080:8080 -v $PWD/target/repos:/tmp/repos -u $(stat -c %u:%g .) yum-repos-app
