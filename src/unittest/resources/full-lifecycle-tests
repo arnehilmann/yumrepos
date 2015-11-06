@@ -48,11 +48,17 @@ $CURL -X PUT $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
 echo "check created repo"
 $CURL $HOST/$TESTREPO1       -i -s | $CHECK_STATE "200 OK"
 
+echo "try to create $TESTREPO1 again"
+$CURL -X PUT $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
+
 echo "upload rpm to $TESTREPO1"
 $CURL -F rpm=@res/$TESTRPM $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
 
 echo "check metadata of uploaded rpm"
 $CURL $HOST/admin/$TESTREPO1/$TESTRPM/info -i -s | grep "Name.*: foo"
+
+echo "try to upload rpm to $TESTREPO1 again"
+$CURL -F rpm=@res/$TESTRPM $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "409 CONFLICT"
 
 echo "create $TESTREPO2"
 $CURL -X PUT $HOST/admin/$TESTREPO2 -i -s | $CHECK_STATE "201 CREATED"
@@ -86,6 +92,9 @@ echo "check for repo links"
 $CURL $HOST/admin/$TESTREPO1/is_link -i -s | grep "false"
 $CURL $HOST/admin/$TESTREPO3/is_link -i -s | grep "true"
 
+echo "try to relink from repo3 to repo2"
+$CURL -X PUT $HOST/admin/$TESTREPO3?link_to=testrepo2 -i -s | $CHECK_STATE "201 CREATED"
+
 if $TEST_YUM; then
     echo "search for rpm via yum"
     $YUM clean all
@@ -113,5 +122,8 @@ $CURL -X DELETE $HOST/admin/$TESTREPO2  -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "remove repo link $TESTREPO3"
 $CURL -X DELETE $HOST/admin/$TESTREPO3  -i -s | $CHECK_STATE "204 NO CONTENT"
+
+echo "try to remove repo link $TESTREPO3 that was removed already"
+$CURL -X DELETE $HOST/admin/$TESTREPO3  -i -s | $CHECK_STATE "404 NOT FOUND"
 
 echo "SUCCESS"
