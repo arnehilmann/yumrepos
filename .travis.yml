@@ -7,13 +7,13 @@ install:
 - pip install coveralls
 - pip install pybuilder
 - pyb install_dependencies
-services:
-- docker
+# services:
+# - docker
 script: pyb
 after_success:
 - coveralls --verbose
-- scripts/build-rpm-builder
-- scripts/build-rpm
+  # - scripts/build-rpm-builder
+  # - scripts/build-rpm
 deploy:
   provider: releases
   api_key:
