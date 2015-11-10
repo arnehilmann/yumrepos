@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from yumrepos import app, FsBackend, app_configure
 
-app_configure(FsBackend('/tmp/repos'), serve_static=True)
+app_configure(FsBackend('/tmp/repos'))
 
 app.run(
     host="0.0.0.0",

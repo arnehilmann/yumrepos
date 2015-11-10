@@ -93,7 +93,6 @@ def add_admin_routes(backend):
     app.register_blueprint(admin, url_prefix='/admin')
 
 
-def configure(backend, serve_static=False):
+def configure(backend):
     add_admin_routes(backend)
-    if serve_static:
-        add_repos_routes(backend)
+    add_repos_routes(backend)

@@ -17,7 +17,7 @@ class Test(unittest.TestCase):
 
     def test(self):
         def testrunner():
-            app_configure(FsBackend('/tmp'), serve_static=True)
+            app_configure(FsBackend('/tmp'))
             application.run("0.0.0.0", self.PORT)
 
         t = threading.Thread(target=testrunner)
