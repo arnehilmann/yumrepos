@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 import unittest
-from yumrepos import app as application
-from yumrepos import app_configure, FsBackend
+from yumrepos import Server, FsBackend
 import requests
 import subprocess
 import os
 import sys
 import threading
+import time
 
 
 class Test(unittest.TestCase):
@@ -17,12 +17,14 @@ class Test(unittest.TestCase):
 
     def test(self):
         def testrunner():
-            app_configure(FsBackend('/tmp'))
+            application = Server(FsBackend('/tmp'))
             application.run("0.0.0.0", self.PORT)
 
         t = threading.Thread(target=testrunner)
         t.setDaemon(True)
         t.start()
+
+        time.sleep(1)
 
         result = subprocess.call(" ".join([os.path.join(os.path.dirname(__file__),
                                                         "../resources/full-lifecycle-tests"), self.HOST]), shell=True)
