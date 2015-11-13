@@ -18,17 +18,14 @@ class Server(object):
     def add_repos_routes(self, backend):
         repos = Blueprint('repos', __name__)
 
-        @repos.route('/', methods=['GET'])
-        def list_repos():
-            return json.dumps(backend.list_repos(), indent=4)
-
-        @repos.route('/<reponame>', methods=['GET'])
-        def list_rpms(reponame):
-            return json.dumps(backend.list_rpms(reponame), indent=4)
-
-        @repos.route('/<reponame>/<path:path>', methods=['GET'])
-        def get_filename(reponame, path):
-            return send_file(backend.get_filename(reponame, path))
+        @repos.route('/', defaults={'path': ''})
+        @repos.route('/<path:path>', methods=['GET'])
+        def get_content(path):
+            if backend.isfile(path):
+                return send_file(backend.get_filename(path))
+            if backend.exists(path):
+                return (json.dumps(backend.list_rpms(path)), 200)
+            return ('', 404)
 
         self.app.register_blueprint(repos, url_prefix='/repos')
 
@@ -43,7 +40,7 @@ class Server(object):
         def is_ready():
             return ('', 200)
 
-        @admin.route('/repos/<reponame>', methods=['PUT'])
+        @admin.route('/repos/<path:reponame>', methods=['PUT'])
         def create_repo(reponame):
             print "create_repo %s" % reponame
             if 'link_to' in request.args:
@@ -53,14 +50,18 @@ class Server(object):
                 return backend.create_repo_link(reponame, link_to)
             return backend.create_repo(reponame)
 
-        @admin.route('/repos/<reponame>', methods=['DELETE', 'DELETERECURSIVLY'])
+        @admin.route('/repos/<path:reponame>', methods=['DELETE', 'DELETERECURSIVLY'])
         def remove_repo(reponame):
             if backend.is_link(reponame):
                 return backend.remove_repo_link(reponame)
             recursivly = request.method == 'DELETERECURSIVLY'
             return backend.remove_repo(reponame, recursivly)
 
-        @admin.route('/repos/<reponame>', methods=['POST'])
+        @admin.route('/repos/<path:reponame>/update-metadata', methods=['GET'])
+        def update_metadata(reponame):
+            return backend.create_repo_metadata(reponame)
+
+        @admin.route('/repos/<path:reponame>', methods=['POST'])
         def upload_rpm(reponame):
             file = request.files['rpm']
             if file and allowed_file(file.filename):
@@ -78,15 +79,15 @@ class Server(object):
                 abort(409)
             return backend.stage(reponame, rpmname, targetreponame)
 
-        @admin.route('/repos/<reponame>/<rpmname>/info', methods=['GET'])
+        @admin.route('/repos/<path:reponame>/<rpmname>/info', methods=['GET'])
         def get_rpm_info(reponame, rpmname):
             return (str(backend.get_rpm_info(reponame, rpmname)), 200)
 
-        @admin.route('/repos/<reponame>/<rpmname>', methods=['DELETE'])
+        @admin.route('/repos/<path:reponame>/<rpmname>', methods=['DELETE'])
         def remove_rpm(reponame, rpmname):
             return backend.remove_rpm(reponame, rpmname)
 
-        @admin.route('/repos/<reponame>/is_link', methods=['GET'])
+        @admin.route('/repos/<path:reponame>/is_link', methods=['GET'])
         def is_repo_a_link(reponame):
             if backend.is_link(reponame):
                 return ('true', 200)

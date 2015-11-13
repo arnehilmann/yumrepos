@@ -93,6 +93,10 @@ class FsBackend(object):
         path = self._to_path(reponame, rpmname)
         return os.path.islink(path) or os.path.exists(path)
 
+    def isfile(self, path):
+        filename = self._to_path(path)
+        return os.path.isfile(filename) and os.path.exists(filename)
+
     def stage(self, source, rpm, target):
         shutil.move(self._to_path(source, rpm), self._to_path(target, rpm))
         self.create_repo_metadata(source)
@@ -129,5 +133,5 @@ class FsBackend(object):
         return [file for file in os.listdir(self._to_path(reponame))
                 if fnmatch(file, '*.rpm')]
 
-    def get_filename(self, reponame, path):
+    def get_filename(self, reponame, path=None):
         return self._to_path(reponame, path)
