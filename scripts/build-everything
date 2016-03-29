@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e -E -u -o pipefail
+
+if [[ -d venv ]]; then
+    echo "sourcing virtualenv found in 'venv'"
+    set +u
+    . venv/bin/activate
+    set -u
+fi
+
+pyb -X
+
+[[ -d venv ]] && deactivate
+
+cd target/dist/*
+python setup.py bdist_rpm
+
+ls -al dist
+rpm -qlp dist/*.noarch.rpm --requires
