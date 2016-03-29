@@ -10,7 +10,7 @@ install:
 - pyb install_dependencies
 # services:
 # - docker
-script: pyb
+script: scripts/build-everything
 after_success:
 - coveralls --verbose
 deploy:
