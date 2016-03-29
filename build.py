@@ -14,7 +14,7 @@ use_plugin('filter_resources')
 name = "yum-repos"
 summary = "yum-repos: simple yum repositories with minimal rest api"
 url = "https://github.com/arnehilmann/yum-repos"
-version = "0.7.4"
+version = "0.7.5"
 
 authors = [Author('Arne Hilmann', 'arne.hilmann@gmail.com')]
 
@@ -38,7 +38,6 @@ def set_properties(project):
     project.rpm_release = "py%i%i" % sys.version_info[0:2]
     project.python_version_range = "python >= {0}.{1}, python <= {0}.{1}.9999".format(*sys.version_info[0:2])
 
-    project.get_property('distutils_commands').append('bdist_rpm')
     project.set_property('copy_resources_target', '$dir_dist')
     project.get_property('copy_resources_glob').extend(['setup.cfg'])
     project.get_property('filter_resources_glob').extend(['**/setup.cfg'])
