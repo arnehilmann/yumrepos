@@ -25,6 +25,7 @@ class FsBackend(object):
                 raise
 
     def create_repo_metadata(self, reponame):
+        print "creating metadata for %s" % reponame
         with open(os.devnull, "w") as fnull:
             subprocess.check_call([self.createrepo_bin, os.path.join(self.repos_folder, reponame)],
                                   stdout=fnull,
@@ -32,16 +33,15 @@ class FsBackend(object):
 
     def create_repo(self, reponame):
         try:
-            print >> sys.stderr, "trying to create_repo %s" % self._to_path(reponame)
+            # print >> sys.stderr, "trying to create_repo %s" % self._to_path(reponame)
             os.mkdir(self._to_path(reponame))
         except OSError as e:
             print e
             print >> sys.stderr, e
             if e.errno != 17:
                 raise
-        print >> sys.stderr, "created!"
+        print "repo %s created!" % reponame
         self.create_repo_metadata(reponame)
-        print >> sys.stderr, "metadata!"
         return ('', 201)
 
     def create_repo_link(self, reponame, link_to):
@@ -135,3 +135,12 @@ class FsBackend(object):
 
     def get_filename(self, reponame, path=None):
         return self._to_path(reponame, path)
+
+    def walk_repos(self):
+        for dirpath, dirnames, filenames in os.walk(self.repos_folder):
+            dirnames[:] = [d for d in dirnames if d != "repodata"]
+            yield dirpath.replace(self.repos_folder, '.')
+
+    def update_all_metadata(self):
+        for reponame in self.walk_repos():
+            self.create_repo_metadata(reponame)

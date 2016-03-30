@@ -12,6 +12,8 @@ class Server(object):
         self.add_admin_routes(backend)
         self.add_repos_routes(backend)
 
+        # backend.update_all_metadata()
+
     def run(self, *args, **kwargs):
         self.app.run(*args, **kwargs)
 
@@ -38,6 +40,11 @@ class Server(object):
 
         @admin.route('/ready')
         def is_ready():
+            return ('', 200)
+
+        @admin.route('/update-all-metadata')
+        def update_all_metadata():
+            backend.update_all_metadata()
             return ('', 200)
 
         @admin.route('/repos/<path:reponame>', methods=['PUT'])
