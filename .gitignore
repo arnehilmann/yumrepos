@@ -60,3 +60,4 @@ ve/
 repos/
 .*.swp
 out
+venv

@@ -3,9 +3,17 @@
 [![Build Status](https://api.travis-ci.org/arnehilmann/yum-repos.svg?branch=master)](https://travis-ci.org/arnehilmann/yum-repos)
 [![Coverage Status](https://coveralls.io/repos/arnehilmann/yum-repos/badge.svg?branch=master&service=github)](https://coveralls.io/github/arnehilmann/yum-repos?branch=master)
 
-minimal yum repo server, with rest API and filesystem backend
+Minimal Yum Repo Server, with ReST API and Filesystem Backend
 
-## tl;dr
+## tl;dr for end users
+
+```
+# point your browser to https://github.com/arnehilmann/yum-repos/releases/latest
+# download rpm suitable for your python version
+yum install yum-repos-*.rpm
+```
+
+## tl;dr for developers
 
 ```
 git clone https://github.com/arnehilmann/yum-repos.git
@@ -30,8 +38,8 @@ pyb -X
 
 ### ...
 
-## generate some dummy rpms
+## quickly generate dummy rpm with fpm
 
 ```
-fpm -s dir -C empty -t rpm -n foo
+fpm -s dir -C empty -t rpm -n foo1
 ```

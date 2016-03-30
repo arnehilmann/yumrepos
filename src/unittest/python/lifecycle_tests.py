@@ -12,7 +12,7 @@ import time
 
 class Test(unittest.TestCase):
 
-    PORT = 8080
+    PORT = 28080
     HOST = "http://localhost:%i" % PORT
 
     def test(self):

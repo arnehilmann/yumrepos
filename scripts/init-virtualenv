@@ -1,0 +1,25 @@
+#!/bin/bash
+set -e -E -u
+
+rm -rf venv
+virtualenv venv
+
+set +u
+. venv/bin/activate
+set -u
+
+for LIB in $(find $PWD/src/main/python -type d); do
+    ln -sf $LIB venv/lib/python*/site-packages/
+done
+for BIN in $(find $PWD/src/main/scripts -type f); do
+    ln -sf $BIN venv/bin/
+done
+
+pip install --upgrade setuptools
+
+pip install pybuilder
+pyb install_dependencies
+
+pyb
+
+cat target/reports/coverage
