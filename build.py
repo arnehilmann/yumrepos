@@ -1,4 +1,3 @@
-import sys
 from pybuilder.core import use_plugin, init, Author
 
 use_plugin("python.core")
@@ -14,7 +13,7 @@ use_plugin('filter_resources')
 name = "yum-repos"
 summary = "yum-repos: simple yum repositories with minimal rest api"
 url = "https://github.com/arnehilmann/yum-repos"
-version = "0.7.6"
+version = "0.7.7"
 
 authors = [Author('Arne Hilmann', 'arne.hilmann@gmail.com')]
 
@@ -34,9 +33,6 @@ def set_properties(project):
     project.build_depends_on('requests')
 
     project.depends_on("flask")
-
-    project.rpm_release = "py%i%i" % sys.version_info[0:2]
-    project.python_version_range = "python >= {0}.{1}, python <= {0}.{1}.9999".format(*sys.version_info[0:2])
 
     project.set_property('copy_resources_target', '$dir_dist')
     project.get_property('copy_resources_glob').extend(['setup.cfg'])
