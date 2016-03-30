@@ -1,20 +1,21 @@
 language: python
 sudo: required
 python:
-- '2.7'
+  - '2.7'
 services:
   - docker
 before_install:
   - docker pull centos:6
 install:
-- pip install coveralls
-- pip install pybuilder
-- pyb install_dependencies
+  - sudo apt-get install rpm yum createrepo
+  - pip install coveralls
+  - pip install pybuilder
+  - pyb install_dependencies
 script:
   - pyb -X
   - scripts/build-on-centos6
 after_success:
-- coveralls --verbose
+  - coveralls --verbose
 deploy:
   provider: releases
   api_key:
