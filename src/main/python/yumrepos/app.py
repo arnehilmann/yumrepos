@@ -1,3 +1,4 @@
+from __future__ import print_function
 import json
 
 from flask import Flask, request, abort, Blueprint, send_file
@@ -49,7 +50,7 @@ class Server(object):
 
         @admin.route('/repos/<path:reponame>', methods=['PUT'])
         def create_repo(reponame):
-            print "create_repo %s" % reponame
+            print("create_repo %s" % reponame)
             if 'link_to' in request.args:
                 link_to = request.args['link_to']
                 if not backend.exists(link_to):

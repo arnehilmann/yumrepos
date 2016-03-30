@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import unittest
 from yumrepos import Server, FsBackend
@@ -31,7 +32,7 @@ class Test(unittest.TestCase):
 
         requests.post("%s/admin/shutdown" % self.HOST)
         t.join(4)
-        print "server still alive? %s" % t.is_alive()
+        print("server still alive? %s" % t.is_alive())
         self.assertEqual(result, 0)
 
 

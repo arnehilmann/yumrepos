@@ -1,10 +1,10 @@
+from __future__ import print_function
 from distutils.spawn import find_executable
 from fnmatch import fnmatch
 import glob
 import os
 import shutil
 import subprocess
-import sys
 
 from werkzeug import secure_filename
 
@@ -48,7 +48,7 @@ class FsBackend(object):
                 raise
 
     def create_repo_metadata(self, reponame):
-        print "creating metadata for %s" % reponame
+        print("creating metadata for %s" % reponame)
         with open(os.devnull, "w") as fnull:
             subprocess.check_call([self.createrepo_bin, os.path.join(self.repos_folder, reponame)],
                                   stdout=fnull,
@@ -59,11 +59,10 @@ class FsBackend(object):
             # print >> sys.stderr, "trying to create_repo %s" % self._to_path(reponame)
             os.mkdir(self._to_path(reponame))
         except OSError as e:
-            print e
-            print >> sys.stderr, e
+            print(e)
             if e.errno != 17:
                 raise
-        print "repo %s created!" % reponame
+        print("repo %s created!" % reponame)
         self.create_repo_metadata(reponame)
         return ('', 201)
 
@@ -145,7 +144,7 @@ class FsBackend(object):
         try:
             output = subprocess.check_output(["rpm", "-qpi", filename])
         except Exception as e:
-            print e
+            print(e)
             raise
         return output
 

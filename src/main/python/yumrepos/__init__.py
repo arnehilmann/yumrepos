@@ -1,2 +1,2 @@
-from fs_backend import FsBackend
-from app import Server
+from yumrepos.fs_backend import FsBackend
+from yumrepos.app import Server
