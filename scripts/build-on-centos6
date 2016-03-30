@@ -1,0 +1,19 @@
+#!/bin/bash
+set -u -e -E -o pipefail
+
+BUILD_DIR=$(readlink -ve target/dist/*)
+DIST_DIR=$BUILD_DIR/dist
+WORK_DIR=/var/tmp
+
+rm -rf $DIST_DIR/*.rpm
+time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:6 bash -c \
+    "ls -al && chown -R root.root . && chmod -R a+w . && yum install -y python-setuptools rpm-build && python setup.py bdist_rpm --release py26 && chmod -R a+w ."
+
+rpm -qilp $DIST_DIR/*.noarch.rpm --requires
+
+time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:6 bash -c \
+    "yum install -y epel-release && yum install -y dist/*.noarch.rpm && (yum-repos &) && sleep 5 && curl -X POST http://0.0.0.0:8080/admin/shutdown && yum remove -y yum-repos"
+
+#docker run -it -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:6 bash
+
+echo "build took $SECONDS seconds"
