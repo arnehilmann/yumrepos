@@ -9,26 +9,27 @@ import subprocess
 from werkzeug import secure_filename
 
 
-if "check_output" not in dir(subprocess):
-    def check_output(*popenargs, **kwargs):
-        r"""Run command with arguments and return its output as a byte string.
-        Backported from Python 2.7 as it's implemented as pure python on stdlib.
-        >>> check_output(['/usr/bin/python', '--version'])
-        Python 2.6.2
+def check_output_backported(*popenargs, **kwargs):
+    r"""Run command with arguments and return its output as a byte string.
+    Backported from Python 2.7 as it's implemented as pure python on stdlib.
+    >>> check_output(['/usr/bin/python', '--version'])
+    Python 2.6.2
 
-        blatantly copied from https://gist.github.com/edufelipe/1027906
-        """
-        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-        output, unused_err = process.communicate()
-        retcode = process.poll()
-        if retcode:
-            cmd = kwargs.get("args")
-            if cmd is None:
-                cmd = popenargs[0]
-            error = subprocess.CalledProcessError(retcode, cmd)
-            error.output = output
-            raise error
-        return output
+    blatantly copied from https://gist.github.com/edufelipe/1027906
+    """
+    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+    output, unused_err = process.communicate()
+    retcode = process.poll()
+    if retcode:
+        cmd = kwargs.get("args")
+        if cmd is None:
+            cmd = popenargs[0]
+        error = subprocess.CalledProcessError(retcode, cmd)
+        error.output = output
+        raise error
+    return output
+
+if "check_output" not in dir(subprocess):
     subprocess.check_output = check_output
 
 
