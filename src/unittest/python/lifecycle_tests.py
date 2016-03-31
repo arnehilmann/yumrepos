@@ -30,7 +30,6 @@ class Test(unittest.TestCase):
         result = subprocess.call(" ".join([os.path.join(os.path.dirname(__file__),
                                                         "../resources/full-lifecycle-tests"), self.HOST]), shell=True)
 
-        requests.post("%s/admin/shutdown" % self.HOST)
         t.join(4)
         print("server still alive? %s" % t.is_alive())
         self.assertEqual(result, 0)

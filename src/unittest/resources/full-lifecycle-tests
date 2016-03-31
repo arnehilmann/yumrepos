@@ -39,6 +39,9 @@ $CURL -X DELETERECURSIVLY $HOST/admin/$TESTREPO3 -s &> /dev/null || :
 echo "check if yum-repo service is up"
 $CURL $HOST/repos/           -i -s | $CHECK_STATE "200 OK"
 
+echo "check if admin service is ready"
+$CURL $HOST/admin/ready      -i -s | $CHECK_STATE "200 OK"
+
 echo "try to upload rpm to non-existant repo"
 $CURL -F rpm=@res/$TESTRPM $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "404 NOT FOUND"
 
@@ -65,6 +68,9 @@ $CURL -X PUT $HOST/admin/$TESTREPO2 -i -s | $CHECK_STATE "201 CREATED"
 
 echo "create empty repo3"
 $CURL -X PUT $HOST/admin/$TESTREPO3 -i -s | $CHECK_STATE "201 CREATED"
+
+echo "update all metadata"
+$CURL $HOST/admin/update-all-metadata -i -s | $CHECK_STATE "200 OK"
 
 if $TEST_YUM; then
     echo "search for rpm via yum"
@@ -103,6 +109,7 @@ if $TEST_YUM; then
     echo "rpm found in repo: " $($YUM info foo --showduplicates | grep "repo3")
 fi
 
+
 echo "tear down test repos"
 
 echo "try to remove non-empty $TESTREPO2"
@@ -125,5 +132,8 @@ $CURL -X DELETE $HOST/admin/$TESTREPO3  -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "try to remove repo link $TESTREPO3 that was removed already"
 $CURL -X DELETE $HOST/admin/$TESTREPO3  -i -s | $CHECK_STATE "404 NOT FOUND"
+
+echo "shutdown service"
+$CURL -X POST $HOST/admin/shutdown      -i -s | $CHECK_STATE "200 OK"
 
 echo "SUCCESS"
