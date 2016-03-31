@@ -6,6 +6,7 @@ services:
   - docker
 before_install:
   - docker pull centos:6
+  - docker pull centos:7
 install:
   - sudo apt-get install -y rpm yum createrepo
   - pip install coveralls
@@ -13,8 +14,9 @@ install:
   - pyb install_dependencies
 script:
   - pyb -X
-  - scripts/build-on-centos6
 after_success:
+  - scripts/build-on-centos6
+  - scripts/build-on-centos7
   - coveralls --verbose
 deploy:
   provider: releases
