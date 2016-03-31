@@ -18,28 +18,91 @@ yum install yum-repos-*.rpm
 ```
 git clone https://github.com/arnehilmann/yum-repos.git
 cd yum-repos
-virtualenv ve
-. ve/bin/activate
-. ./initenv
-pip install pybuilder
-pyb install_dependencies
-
-pyb -X
+scripts/init-virtualenv
+. venv/bin/activate
 ```
 
 ## rest API
 
-### list all repos
+### check if yum-repo service is up
+```curl $HOST/repos/```
 
-```curl http://<yourhost>/repos```
+response: 200 OK, exit code of curl != 0
 
-### add repo 'new-repo'
-```curl -X PUT http://<yourhost>/admin/repos/new-repo```
 
-### ...
 
-## quickly generate dummy rpm with fpm
+### create repo
+```curl -X PUT $HOST/admin/NEW_REPO```
 
-```
-fpm -s dir -C empty -t rpm -n foo1
-```
+response: 201 CREATED, ?
+
+
+
+### check repo
+```curl $HOST/$TESTREPO1/```
+
+response: 200 OK, 404 NOT FOUND
+
+
+
+### upload rpm
+```curl -F rpm=@file_to_be_uploaded.rpm $HOST/admin/TARGET_REPO```
+
+response: 201 CREATED, 404 NOT FOUND
+
+
+
+### check metadata of uploaded rpm
+```curL $HOST/admin/TARGET_REPO/RPM/info```
+
+response: 200 OK (info in response body as json), 404 NOT FOUND
+
+
+
+### move rpm to another repo
+```curl -X STAGE $HOST/admin/SOURCE_REPO/RPM/stageto/TARGET_REPO```
+
+response: ?
+
+
+
+### delete empty repo
+```curl -X DELETE $HOST/admin/OBSOLETE_REPO```
+
+repsonse: 204 NO CONTENT, 409 CONFLICT (if not empty)
+
+
+
+### link to another repo
+```curl -X PUT $HOST/admin/NEW_REPO?link_to=REPO_ALREADY_PRESENT```
+
+response: 201 CREATED
+
+
+
+### check if repo is a link
+```curl $HOST/admin/REPO_TO_CHECK/is_link```
+
+repsonse: 200 OK (true or false in response body), 404 NOT FOUND
+
+
+
+### delete rpm
+```curl -X DELETE $HOST/admin/REPO/RPM_TO_DELETE```
+
+response: 204 NO CONTENT, 404 NOT FOUND
+
+
+
+### delete repo recursivly
+```curl -X DELETERECURSIVLY $HOST/admin/REPO_TO_BE_DELETED```
+
+response: ?
+
+
+
+### shutdown repo server
+```curl -X POST $HOST/admin/shutdown```
+
+response: ?
+
