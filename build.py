@@ -35,5 +35,5 @@ def set_properties(project):
     project.depends_on("flask")
 
     project.set_property('copy_resources_target', '$dir_dist')
-    project.get_property('copy_resources_glob').extend(['setup.cfg'])
-    project.get_property('filter_resources_glob').extend(['**/setup.cfg'])
+    project.get_property('copy_resources_glob').extend(['setup.*cfg'])
+    project.get_property('filter_resources_glob').extend(['**/setup.*cfg'])

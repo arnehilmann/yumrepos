@@ -1,0 +1,81 @@
+#!/bin/bash
+set -u -e -E -o pipefail
+
+BUILD_DIR=$(readlink -ve target/dist/*)
+DIST_DIR=$BUILD_DIR/dist
+WORK_DIR=/var/tmp
+
+PY_VERSION=$(python -c 'import sys; print("%i%i" % sys.version_info[0:2])')
+echo "python version found: '$PY_VERSION'"
+
+
+build_on_centos6() {
+    echo "building rpm on centos6"
+    time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:6 bash -c "
+        mkdir /tmp/build &&
+        cp -R * /tmp/build &&
+        cd /tmp/build &&
+        cp setup.centos6.cfg setup.cfg &&
+        chown -R root.root . &&
+        yum install -y python-setuptools rpm-build &&
+        python setup.py bdist_rpm &&
+        cp dist/*.rpm /var/tmp/dist"
+    time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:6 bash -c "
+        rpm -qilp dist/*-py26.noarch.rpm &&
+        yum install -y epel-release &&
+        yum install -y dist/*-py26.noarch.rpm &&
+        (yum-repos &) &&
+        sleep 5 &&
+        curl -s -X POST http://0.0.0.0:8080/admin/shutdown"
+}
+
+build_on_centos7() {
+    echo "building rpm on centos7"
+    time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:7 bash -c "
+        mkdir /tmp/build &&
+        cp -R * /tmp/build &&
+        cd /tmp/build &&
+        cp setup.centos7.cfg setup.cfg &&
+        chown -R root.root . &&
+        yum install -y python-setuptools rpm-build &&
+        python setup.py bdist_rpm &&
+        cp dist/*.rpm /var/tmp/dist"
+    time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:7 bash -c "
+        rpm -qilp dist/*-py27.noarch.rpm &&
+        yum install -y epel-release &&
+        yum install -y dist/*-py27.noarch.rpm &&
+        (yum-repos &) &&
+        sleep 5 &&
+        curl -s -X POST http://0.0.0.0:8080/admin/shutdown"
+}
+
+build_on_fedora23() {
+    echo "building rpm on fedora23"
+    time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR fedora:23 bash -c "
+        mkdir /tmp/build &&
+        cp -R * /tmp/build &&
+        cd /tmp/build &&
+        cp setup.fedora23.cfg setup.cfg &&
+        chown -R root.root . &&
+        dnf install -y rpm-build &&
+        python3 setup.py bdist_rpm &&
+        cp dist/*.rpm /var/tmp/dist"
+    time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR fedora:23 bash -c "
+        rpm -qilp dist/*-py34.noarch.rpm &&
+        dnf install -y dist/*-py34.noarch.rpm &&
+        (yum-repos &) &&
+        sleep 5 &&
+        curl -s -X POST http://0.0.0.0:8080/admin/shutdown"
+}
+
+case $PY_VERSION in
+    35) build_on_fedora23;;
+    34) build_on_fedora23;;
+    27) build_on_centos7;;
+    26) build_on_centos6;;
+    *)  echo "unknown python version '$PY_VERSION', aborting here..."
+        exit 2
+        ;;
+esac
+
+echo "build took $SECONDS seconds"
