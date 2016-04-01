@@ -30,7 +30,7 @@ def check_output_backported(*popenargs, **kwargs):
     return output
 
 if "check_output" not in dir(subprocess):
-    subprocess.check_output = check_output
+    subprocess.check_output = check_output_backported
 
 
 class FsBackend(object):
