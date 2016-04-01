@@ -1,6 +1,7 @@
 language: python
 sudo: required
 python:
+  - '2.6'
   - '2.7'
 services:
   - docker
@@ -15,8 +16,7 @@ install:
 script:
   - pyb -X
 after_success:
-  - scripts/build-on-centos6
-  - scripts/build-on-centos7
+  - scripts/build-rpm
   - coveralls --verbose
 deploy:
   provider: releases
@@ -25,6 +25,7 @@ deploy:
   file:
     - $(find target/dist/yum-repos-*/dist/yum-repos-*.noarch.rpm)
     - $(find target/dist/yum-repos-*/dist/yum-repos-*.src.rpm)
+    - $(find target/dist/yum-repos-*/dist/yum-repos-*.whl)
   skip_cleanup: true
   on:
     tags: true
