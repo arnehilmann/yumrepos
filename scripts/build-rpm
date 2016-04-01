@@ -40,7 +40,8 @@ build_on_centos7() {
         chown -R root.root . &&
         yum install -y python-setuptools rpm-build &&
         python setup.py bdist_rpm &&
-        cp dist/*.rpm /var/tmp/dist"
+        cp dist/*.rpm /var/tmp/dist &&
+        chown -R $(stat -c %u:%g .) /var/tmp/dist"
     time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:7 bash -c "
         rpm -qilp dist/*-py27.noarch.rpm &&
         yum install -y epel-release &&
@@ -60,7 +61,8 @@ build_on_fedora23() {
         chown -R root.root . &&
         dnf install -y rpm-build &&
         python3 setup.py bdist_rpm &&
-        cp dist/*.rpm /var/tmp/dist"
+        cp dist/*.rpm /var/tmp/dist &&
+        chown -R $(stat -c %u:%g .) /var/tmp/dist"
     time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR fedora:23 bash -c "
         rpm -qilp dist/*-py34.noarch.rpm &&
         dnf install -y dist/*-py34.noarch.rpm &&
