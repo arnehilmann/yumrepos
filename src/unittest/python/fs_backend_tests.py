@@ -9,7 +9,7 @@ import yumrepos.fs_backend as backend
 class Test(unittest.TestCase):
     def test_check_output(self):
         result = backend.check_output_backported(["echo", "foo"])
-        self.assertEqual(result, "foo\n")
+        self.assertEqual(result, b"foo\n")
 
 
 if __name__ == "__main__":
