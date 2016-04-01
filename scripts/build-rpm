@@ -19,6 +19,7 @@ build_on_centos6() {
         chown -R root.root . &&
         yum install -y python-setuptools rpm-build &&
         python setup.py bdist_rpm &&
+        chown -R $(stat -c %u:%g .) dist &&
         cp dist/*.rpm /var/tmp/dist"
     time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:6 bash -c "
         rpm -qilp dist/*-py26.noarch.rpm &&
@@ -77,5 +78,20 @@ case $PY_VERSION in
         exit 2
         ;;
 esac
+
+echo "dist dir after build, before chmod"
+ls -al $DIST_DIR
+
+chmod -R a+rwx $DIST_DIR
+
+echo "--------"
+ls -al target
+echo "--------"
+ls -al target/dist/
+echo "--------"
+ls -al $BUILD_DIR
+echo "--------"
+ls -al $DIST_DIR
+echo "--------"
 
 echo "build took $SECONDS seconds"
