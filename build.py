@@ -1,4 +1,4 @@
-from pybuilder.core import use_plugin, init, Author
+from pybuilder.core import use_plugin, init, Author, task
 
 use_plugin("python.core")
 use_plugin("python.unittest")
@@ -26,6 +26,13 @@ description = """yum-repos
 """
 
 default_task = ["clean", "analyze", "publish"]
+
+
+@task
+def gittag(project, logger):
+    logger.info("The following commands create a new release, triggering all the fun stuff:")
+    logger.info("git tag -a v{0} -m v{0}".format(project.version))
+    logger.info("git push --tags")
 
 
 @init
