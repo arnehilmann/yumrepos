@@ -13,7 +13,7 @@ use_plugin('filter_resources')
 name = "yum-repos"
 summary = "yum-repos: simple yum repositories with minimal rest api"
 url = "https://github.com/arnehilmann/yum-repos"
-version = "0.7.11"
+version = "0.7.12"
 
 authors = [Author('Arne Hilmann', 'arne.hilmann@gmail.com')]
 
@@ -40,6 +40,10 @@ def set_properties(project):
     project.build_depends_on('requests')
 
     project.depends_on("flask")
+    try:
+        import functools.lru_cache
+    except ImportError:
+        project.depends_on("backports.functools_lru_cache")
 
     project.set_property('copy_resources_target', '$dir_dist')
     project.get_property('copy_resources_glob').extend(['setup.*cfg'])
