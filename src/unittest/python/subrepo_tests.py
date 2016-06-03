@@ -18,8 +18,7 @@ class Test(unittest.TestCase):
 
     def test(self):
         def testrunner():
-            # application = Server(FsBackend('/tmp'))
-            application = Server(FsBackend(os.path.join(os.getcwd(), "target", "repos")))
+            application = Server(FsBackend('/tmp'))
             application.run("0.0.0.0", self.PORT)
 
         t = threading.Thread(target=testrunner)
@@ -29,7 +28,7 @@ class Test(unittest.TestCase):
         time.sleep(1)
 
         result = subprocess.call(" ".join([os.path.join(os.path.dirname(__file__),
-                                                        "../resources/full-lifecycle-tests"), self.HOST]), shell=True)
+                                                        "../resources/subrepo-tests"), self.HOST]), shell=True)
 
         t.join(4)
         print("server still alive? %s" % t.is_alive())
