@@ -1,14 +1,16 @@
 #!/bin/bash
 set -e -E -u
 
+VIRTUALENV_OPTS=${1:+ -p /usr/bin/python$1}
+
 rm -rf venv
-virtualenv venv
+virtualenv venv $VIRTUALENV_OPTS
 
 set +u
 . venv/bin/activate
 set -u
 
-for LIB in $(find $PWD/src/main/python -type d -and -not -name "__pycache__"); do
+for LIB in $(find $PWD/src/main/python -not -name "__pycache__"); do
     ln -sf $LIB venv/lib/python*/site-packages/
 done
 for BIN in $(find $PWD/src/main/scripts -type f); do
