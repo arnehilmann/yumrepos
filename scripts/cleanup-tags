@@ -1,0 +1,13 @@
+#!/bin/bash
+set -u -e -E
+
+git tag  | sort -V | head -n -5 > to_be_deleted
+cat to_be_deleted
+
+echo "These tags will be deleted! If you are unsure, hit Ctrl-C NOW!"
+sleep 10
+
+while read t; do
+    git tag -d $t
+    git push origin :refs/tags/$t
+done < to_be_deleted
