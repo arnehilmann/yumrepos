@@ -41,12 +41,13 @@ class Server(object):
 
         @admin.route('/ready')
         def is_ready():
-            return ('', 200)
+            return ('', 204)
 
+        @admin.route('/update')
         @admin.route('/update-all-metadata')
         def update_all_metadata():
             backend.update_all_metadata()
-            return ('', 200)
+            return ('', 204)
 
         @admin.route('/repos/<path:reponame>', methods=['PUT'])
         def create_repo(reponame):
@@ -72,6 +73,7 @@ class Server(object):
         @admin.route('/repos/<path:reponame>', methods=['POST'])
         def upload_rpm(reponame):
             file = request.files['rpm']
+            # import pdb; pdb.set_trace()
             if file and allowed_file(file.filename):
                 return backend.upload_rpm(reponame, file)
 

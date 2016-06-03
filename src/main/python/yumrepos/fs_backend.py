@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import print_function
 from distutils.spawn import find_executable
 from fnmatch import fnmatch
@@ -5,8 +6,49 @@ import glob
 import os
 import shutil
 import subprocess
+import sys
+
+try:
+    from functools import lru_cache
+except ImportError:
+    from backports.functools_lru_cache import lru_cache
 
 from werkzeug import secure_filename
+
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+def touch(fname, times=None):
+    with open(fname, 'a'):
+        os.utime(fname, times)
+
+
+def remove(fname):
+    if os.path.exists(fname):
+        os.remove(fname)
+
+
+def mark_as_added(filename):
+    unmark_as_deleted(filename)
+    touch(filename + ".added")
+
+
+def unmark_as_added(filename):
+    remove(filename + ".added")
+
+
+def mark_as_deleted(filename):
+    unmark_as_added(filename)
+    touch(filename + ".removed")
+
+
+def unmark_as_deleted(filename):
+    try:
+        remove(filename + ".removed")
+    except FileNotFoundError:
+        pass
 
 
 def check_output_backported(*popenargs, **kwargs):
@@ -29,6 +71,7 @@ def check_output_backported(*popenargs, **kwargs):
         raise error
     return output
 
+
 if "check_output" not in dir(subprocess):
     subprocess.check_output = check_output_backported
 
@@ -48,10 +91,14 @@ class FsBackend(object):
             if e.errno != 17:
                 raise
 
+    # repo stuff
+
     def create_repo_metadata(self, reponame):
         print("creating metadata for %s" % reponame)
         with open(os.devnull, "w") as fnull:
-            subprocess.check_call([self.createrepo_bin, os.path.join(self.repos_folder, reponame)],
+            subprocess.check_call([self.createrepo_bin,
+                                   "--update",
+                                   os.path.join(self.repos_folder, reponame)],
                                   stdout=fnull,
                                   stderr=fnull)
 
@@ -65,12 +112,6 @@ class FsBackend(object):
                 raise
         print("repo %s created!" % reponame)
         self.create_repo_metadata(reponame)
-        return ('', 201)
-
-    def create_repo_link(self, reponame, link_to):
-        if self.exists(reponame):
-            os.remove(self._to_path(reponame))
-        os.symlink(link_to, self._to_path(reponame))
         return ('', 201)
 
     def remove_repo(self, reponame, recursivly=False):
@@ -88,11 +129,21 @@ class FsBackend(object):
             raise
         return ('', 204)
 
+    # repo link stuff
+
+    def create_repo_link(self, reponame, link_to):
+        if self.exists(reponame):
+            os.remove(self._to_path(reponame))
+        os.symlink(link_to, self._to_path(reponame))
+        return ('', 201)
+
     def remove_repo_link(self, reponame):
         if not self.exists(reponame):
             return ('', 404)
         os.remove(self._to_path(reponame))
         return ('', 204)
+
+    # rpm stuff
 
     def upload_rpm(self, reponame, file):
         filename = secure_filename(file.filename)
@@ -100,8 +151,8 @@ class FsBackend(object):
         if os.path.exists(complete_filename):
             return "%s already exists" % filename, 409
         try:
+            mark_as_added(complete_filename)
             file.save(complete_filename)
-            self.create_repo_metadata(reponame)
             return ('', 201)
         except IOError as e:
             if e.errno == 2:
@@ -128,18 +179,15 @@ class FsBackend(object):
 
     def remove_rpm(self, reponame, rpmname):
         filename = self._to_path(reponame, rpmname)
-        try:
-            os.unlink(filename)
-            self.create_repo_metadata(reponame)
-        except OSError as e:
-            if e.errno == 2:
-                return ('', 404)
-            raise
+        if not os.path.exists(filename):
+            return ('', 404)
+        mark_as_deleted(filename)
         return ('', 204)
 
     def is_link(self, reponame):
         return os.path.islink(self._to_path(reponame))
 
+    @lru_cache()
     def get_rpm_info(self, reponame, rpmname):
         filename = self._to_path(reponame, rpmname)
         try:
@@ -165,5 +213,25 @@ class FsBackend(object):
             yield dirpath.replace(self.repos_folder, '.')
 
     def update_all_metadata(self):
+        self.commit_actions()
         for reponame in self.walk_repos():
             self.create_repo_metadata(reponame)
+
+    def commit_actions(self):
+        for dirpath, dirnames, filenames in os.walk(self.repos_folder):
+            dirnames[:] = [d for d in dirnames if d != "repodata"]
+            for filename in filenames:
+                filename, action = self.split_action(filename)
+                if not action:
+                    continue
+                full_path = os.path.join(dirpath, filename)
+                if action == "removed":
+                    os.unlink(full_path)
+                    unmark_as_deleted(full_path)
+                if action == "added":
+                    unmark_as_added(full_path)
+
+    def split_action(self, full_filename):
+        if full_filename.endswith("added") or full_filename.endswith("removed"):
+            return full_filename.rsplit(".", 1)
+        return (full_filename, None)
