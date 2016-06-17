@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-import unittest
-from yumrepos import Server, FsBackend
+import os
 import requests
 import subprocess
-import os
 import sys
 import threading
 import time
+import unittest
+
+from yumrepos.app import create_application
+from yumrepos.fs_backend import FsBackend
 
 
 class Test(unittest.TestCase):
