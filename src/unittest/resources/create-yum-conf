@@ -12,9 +12,9 @@ debuglevel=2
 logfile=out/log/yum.log
 exactarch=1
 obsoletes=1
-gpgcheck=1
 plugins=1
 distroverpkg=centos-release
+sslverify=0
 EOF
 
 for I in $*; do
