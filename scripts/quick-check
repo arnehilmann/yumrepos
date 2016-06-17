@@ -1,0 +1,43 @@
+#!/bin/sh
+set -u -e -E
+
+# checks the most important parts of the yumrepo service
+# on a systemd system, it could be used like this:
+# clear \
+#    && systemctl restart httpd \
+#    && echo "rampup" \
+#    && sleep 3 \
+#    && systemctl status httpd --no-pager -l \
+#    && echo \
+#    && scripts/quick-check
+
+
+PREFIX=${1:-https://yumrepos}
+
+trap "echo; echo AN ERROR OCCURED!" err
+
+OK=true
+while read URL ASSERTION; do
+    THIS_OK=true
+    RESPONSE=$(curl -kLsi $PREFIX$URL | head -n 1 | tr -d '\n\r')
+    echo $RESPONSE | grep -q $ASSERTION || THIS_OK=false
+
+    if $THIS_OK; then
+        echo "  $PREFIX$URL - $ASSERTION"
+    else
+        echo "! $PREFIX$URL - '$ASSERTION' not in '$RESPONSE'"
+        OK=false
+    fi
+done <<'EOTESTS'
+/ 404
+/repos/ 200
+/repos/test1/ 200
+/admin/ready 204
+/json/test1 200
+EOTESTS
+
+if ! $OK; then
+    echo
+    echo "ASSERTION FAILED!"
+    exit 1
+fi
