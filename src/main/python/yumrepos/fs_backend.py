@@ -5,7 +5,6 @@ import glob
 import os
 import shutil
 import subprocess
-import sys
 
 try:
     from functools import lru_cache
@@ -48,7 +47,7 @@ def mark_as_obsolete(filename):
 def unmark_as_obsolete(filename):
     try:
         remove(filename + "." + OBSOLETE)
-    except FileNotFoundError:
+    except OSError:
         pass
 
 
@@ -112,7 +111,7 @@ class FsBackend(object):
             os.mkdir(self._to_path(reponame))
         except OSError as e:
             if e.errno != 17:
-		log.error(e)
+                log.error(e)
                 raise
         log.info("repo %s created!" % reponame)
         self.create_repo_metadata(reponame)

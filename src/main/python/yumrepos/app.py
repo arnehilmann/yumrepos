@@ -5,6 +5,7 @@ from flask import Flask, request, abort, Blueprint, send_file
 
 from yumrepos import log
 
+
 def add_repos_routes(app, backend):
     repos = Blueprint('repos', __name__)
 
@@ -84,7 +85,7 @@ def add_admin_routes(app, backend, allowed_extensions):
     def get_rpm_info(reponame, rpmname):
         try:
             return (str(backend.get_rpm_info(reponame, rpmname)), 200)
-        except Exception as e:
+        except Exception:
             return ('', 404)
 
     @admin.route('/repos/<path:reponame>/<rpmname>', methods=['DELETE'])

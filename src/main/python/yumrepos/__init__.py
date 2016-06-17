@@ -5,7 +5,7 @@ log = logging.getLogger()
 
 log.setLevel(logging.DEBUG)
 
-handler = logging.handlers.SysLogHandler(address = '/dev/log')
+handler = logging.handlers.SysLogHandler(address='/dev/log')
 # handler = logging.handlers.SysLogHandler()
 
 formatter = logging.Formatter('%(module)s.%(funcName)s: %(message)s')

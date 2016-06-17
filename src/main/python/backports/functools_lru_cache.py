@@ -10,8 +10,8 @@ _CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize"])
 @functools.wraps(functools.update_wrapper)
 def update_wrapper(wrapper,
                    wrapped,
-                   assigned = functools.WRAPPER_ASSIGNMENTS,
-                   updated = functools.WRAPPER_UPDATES):
+                   assigned=functools.WRAPPER_ASSIGNMENTS,
+                   updated=functools.WRAPPER_UPDATES):
     """
     Patch two bugs in functools.update_wrapper.
     """
