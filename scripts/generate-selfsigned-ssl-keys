@@ -3,13 +3,17 @@ set -u -e -E
 
 HOST=${1:?no HOST given?!}
 
-rm -f generated/$HOST.*
-mkdir -p generated
+OUT=target/ssl-keys
+
+rm -f $OUT/$HOST.*
+mkdir -p $OUT
 openssl req -x509 -nodes -days 365 \
     -newkey rsa:2048 \
-    -keyout generated/$HOST.key \
+    -keyout $OUT/$HOST.key \
     -subj "/CN=$HOST" \
-    -out generated/$HOST.crt
+    -out $OUT/$HOST.crt
+chmod 640 $OUT/$HOST.*
 
 echo "trying to copy key and self-signed cert to /etc/ssl"
-sudo cp generated/$HOST.* /etc/ssl/
+sudo cp $OUT/$HOST.* /etc/ssl/
+ls -al /etc/ssl/$HOST.*
