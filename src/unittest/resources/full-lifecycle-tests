@@ -11,7 +11,7 @@ TESTREPO3=repos/testrepo3
 # PORT=8080
 # HOST=http://localhost${PORT:+:$PORT}
 TESTRPM=foo-1.0-1.x86_64.rpm
-CURL="curl -k"
+CURL="curl -kLis"
 CHECK_STATE="grep -i"
 OUT=target/full-lifecycle-tests
 
@@ -37,19 +37,19 @@ $CURL -X DELETERECURSIVLY $HOST/admin/$TESTREPO3 -s &> /dev/null || :
 
 
 echo "check if yum-repo service is up"
-$CURL $HOST/repos/           -i -s | $CHECK_STATE "200 OK"
+$CURL $HOST/repos | $CHECK_STATE "200 OK"
 
 echo "check if admin service is ready"
-$CURL $HOST/admin/ready      -i -s | $CHECK_STATE "204 NO CONTENT"
+$CURL $HOST/admin/ready | $CHECK_STATE "204 NO CONTENT"
 
 echo "try to upload rpm to non-existant repo"
-$CURL -F rpm=@res/$TESTRPM $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "404 NOT FOUND"
+$CURL -F rpm=@res/$TESTRPM $HOST/admin/$TESTREPO1 | $CHECK_STATE "404 NOT FOUND"
 
 echo "create $TESTREPO1"
-$CURL -X PUT $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
+$CURL -X PUT $HOST/admin/$TESTREPO1 | $CHECK_STATE "201 CREATED"
 
 echo "check created repo"
-$CURL $HOST/$TESTREPO1       -i -s | $CHECK_STATE "200 OK"
+$CURL $HOST/$TESTREPO1 | $CHECK_STATE "200 OK"
 
 echo "try to create $TESTREPO1 again"
 $CURL -X PUT $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
@@ -139,7 +139,9 @@ $CURL -X DELETE $HOST/admin/$TESTREPO3  -i -s | $CHECK_STATE "204 NO CONTENT"
 echo "try to remove repo link $TESTREPO3 that was removed already"
 $CURL -X DELETE $HOST/admin/$TESTREPO3  -i -s | $CHECK_STATE "404 NOT FOUND"
 
-echo "shutdown service"
-$CURL -X POST $HOST/admin/shutdown      -i -s | $CHECK_STATE "200 OK"
+echo "trying to shutdown service, may fail when running as wsgi service"
+$CURL -X POST $HOST/admin/shutdown
 
+echo
+echo
 echo "SUCCESS"
