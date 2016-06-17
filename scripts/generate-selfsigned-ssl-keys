@@ -1,0 +1,15 @@
+#!/bin/bash
+set -u -e -E
+
+HOST=${1:?no HOST given?!}
+
+rm -f generated/$HOST.*
+mkdir -p generated
+openssl req -x509 -nodes -days 365 \
+    -newkey rsa:2048 \
+    -keyout generated/$HOST.key \
+    -subj "/CN=$HOST" \
+    -out generated/$HOST.crt
+
+echo "trying to copy key and self-signed cert to /etc/ssl"
+sudo cp generated/$HOST.* /etc/ssl/
