@@ -2,9 +2,17 @@
 from __future__ import print_function
 
 import sys
+
+try:
+    from functools import lru_cache
+    sys.exit(0)
+except ImportError:
+    pass
+
 import unittest
 
 from backports import functools_lru_cache
+
 
 class Test(unittest.TestCase):
     def test_with_bound_cache(self):
