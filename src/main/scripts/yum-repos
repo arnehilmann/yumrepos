@@ -1,10 +1,6 @@
 #!/usr/bin/env python
-from yumrepos import Server, FsBackend
+from yumrepos.app import create_application
+from yumrepos.fs_backend import FsBackend
 
-server = Server(FsBackend('/tmp/repos'))
-
-server.run(
-    host="0.0.0.0",
-    port=int("8080"),
-    debug=True
-)
+app = create_application(FsBackend('/tmp/repos'))
+app.run(host="0.0.0.0", port=int("8080"), debug=True)
