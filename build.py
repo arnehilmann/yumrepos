@@ -43,7 +43,8 @@ def set_properties(project):
     try:
         import functools.lru_cache
     except ImportError:
-        project.depends_on("backports.functools_lru_cache")
+        pass
+        # project.depends_on("backports.functools_lru_cache")
 
     project.set_property('copy_resources_target', '$dir_dist')
     project.get_property('copy_resources_glob').extend(['setup.*cfg'])
