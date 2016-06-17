@@ -9,7 +9,7 @@ import subprocess
 try:
     from functools import lru_cache
 except ImportError:
-    from backports.functools_lru_cache import lru_cache
+    from yumrepos.backports.functools_lru_cache import lru_cache
 
 from werkzeug import secure_filename
 
