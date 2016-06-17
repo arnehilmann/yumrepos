@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
 from distutils.spawn import find_executable
 from fnmatch import fnmatch
 import glob
@@ -15,9 +14,11 @@ except ImportError:
 
 from werkzeug import secure_filename
 
+from yumrepos import log
 
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+
+NEW = "new"
+OBSOLETE = "obsolete"
 
 
 def touch(fname, times=None):
@@ -30,23 +31,23 @@ def remove(fname):
         os.remove(fname)
 
 
-def mark_as_added(filename):
-    unmark_as_deleted(filename)
-    touch(filename + ".added")
+def mark_as_new(filename):
+    unmark_as_obsolete(filename)
+    touch(filename + "." + NEW)
 
 
-def unmark_as_added(filename):
-    remove(filename + ".added")
+def unmark_as_new(filename):
+    remove(filename + "." + NEW)
 
 
-def mark_as_deleted(filename):
-    unmark_as_added(filename)
-    touch(filename + ".removed")
+def mark_as_obsolete(filename):
+    unmark_as_new(filename)
+    touch(filename + "." + OBSOLETE)
 
 
-def unmark_as_deleted(filename):
+def unmark_as_obsolete(filename):
     try:
-        remove(filename + ".removed")
+        remove(filename + "." + OBSOLETE)
     except FileNotFoundError:
         pass
 
@@ -91,10 +92,13 @@ class FsBackend(object):
             if e.errno != 17:
                 raise
 
+        log.info("repo folder: %s" % self.repos_folder)
+        log.info("createrepo binary: %s" % self.createrepo_bin)
+
     # repo stuff
 
     def create_repo_metadata(self, reponame):
-        print("creating metadata for %s" % reponame)
+        log.debug("creating metadata for %s" % os.path.join(self.repos_folder, reponame))
         with open(os.devnull, "w") as fnull:
             subprocess.check_call([self.createrepo_bin,
                                    "--update",
@@ -104,13 +108,13 @@ class FsBackend(object):
 
     def create_repo(self, reponame):
         try:
-            # print >> sys.stderr, "trying to create_repo %s" % self._to_path(reponame)
+            log.debug("trying to create_repo %s" % self._to_path(reponame))
             os.mkdir(self._to_path(reponame))
         except OSError as e:
-            print(e)
             if e.errno != 17:
+		log.error(e)
                 raise
-        print("repo %s created!" % reponame)
+        log.info("repo %s created!" % reponame)
         self.create_repo_metadata(reponame)
         return ('', 201)
 
@@ -151,7 +155,7 @@ class FsBackend(object):
         if os.path.exists(complete_filename):
             return "%s already exists" % filename, 409
         try:
-            mark_as_added(complete_filename)
+            mark_as_new(complete_filename)
             file.save(complete_filename)
             return ('', 201)
         except IOError as e:
@@ -181,7 +185,7 @@ class FsBackend(object):
         filename = self._to_path(reponame, rpmname)
         if not os.path.exists(filename):
             return ('', 404)
-        mark_as_deleted(filename)
+        mark_as_obsolete(filename)
         return ('', 204)
 
     def is_link(self, reponame):
@@ -190,17 +194,14 @@ class FsBackend(object):
     @lru_cache()
     def get_rpm_info(self, reponame, rpmname):
         filename = self._to_path(reponame, rpmname)
-        try:
-            output = subprocess.check_output(["rpm", "-qpi", filename])
-        except Exception as e:
-            print(e)
-            raise
-        return output
+        return subprocess.check_output(["rpm", "-qpi", filename])
 
     def list_repos(self):
+        log.debug("listing %s" % self.repos_folder)
         return os.listdir(self.repos_folder)
 
     def list_rpms(self, reponame):
+        log.debug("listing %s" % os.listdir(self._to_path(reponame)))
         return [file for file in os.listdir(self._to_path(reponame))
                 if fnmatch(file, '*.rpm')]
 
@@ -225,13 +226,13 @@ class FsBackend(object):
                 if not action:
                     continue
                 full_path = os.path.join(dirpath, filename)
-                if action == "removed":
+                if action == OBSOLETE:
                     os.unlink(full_path)
-                    unmark_as_deleted(full_path)
-                if action == "added":
-                    unmark_as_added(full_path)
+                    unmark_as_obsolete(full_path)
+                if action == NEW:
+                    unmark_as_new(full_path)
 
     def split_action(self, full_filename):
-        if full_filename.endswith("added") or full_filename.endswith("removed"):
+        if full_filename.endswith(NEW) or full_filename.endswith(OBSOLETE):
             return full_filename.rsplit(".", 1)
         return (full_filename, None)
