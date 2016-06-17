@@ -5,11 +5,12 @@ set -e -E -u -o pipefail -C
 HOST=${1:?no HOST given?!}
 echo "testing $HOST"
 
-TESTREPO1=repos/testrepo1
-TESTREPO2=repos/testrepo2
-TESTREPO3=repos/testrepo3
-# PORT=8080
-# HOST=http://localhost${PORT:+:$PORT}
+REPOS=${2:-$HOST}
+echo "using repos found under $REPOS"
+
+TESTREPO1=testrepo1
+TESTREPO2=testrepo2
+TESTREPO3=testrepo3
 TESTRPM=foo-1.0-1.x86_64.rpm
 CURL="curl -kLis"
 CHECK_STATE="grep -i"
@@ -25,49 +26,51 @@ if yum --version &> /dev/null; then
     YUM="yum -c $YUM_CONF"
     echo "'yum' command found"
 
-    $(dirname $0)/create-yum-conf $HOST $TESTREPO1 $TESTREPO2 $TESTREPO3 > $YUM_CONF
+    $(dirname $0)/create-yum-conf $REPOS $TESTREPO1 $TESTREPO2 $TESTREPO3 > $YUM_CONF
 fi
 
 trap "echo; echo; echo AN ERROR OCCURED; echo; exit 1" ERR
 
 echo "preparing test repos"
-$CURL -X DELETERECURSIVLY $HOST/admin/$TESTREPO1 -s &> /dev/null || :
-$CURL -X DELETERECURSIVLY $HOST/admin/$TESTREPO2 -s &> /dev/null || :
-$CURL -X DELETERECURSIVLY $HOST/admin/$TESTREPO3 -s &> /dev/null || :
+$CURL -X DELETERECURSIVLY $HOST/admin/repos/$TESTREPO1 -s &> /dev/null || :
+$CURL -X DELETERECURSIVLY $HOST/admin/repos/$TESTREPO2 -s &> /dev/null || :
+$CURL -X DELETERECURSIVLY $HOST/admin/repos/$TESTREPO3 -s &> /dev/null || :
 
+
+echo "check if repos available"
+$CURL $REPOS
 
 echo "check if yum-repo service is up"
-$CURL $HOST/repos | $CHECK_STATE "200 OK"
+echo $CURL $HOST/json
+$CURL $HOST/json
+$CURL $HOST/json | $CHECK_STATE "200 OK"
 
 echo "check if admin service is ready"
 $CURL $HOST/admin/ready | $CHECK_STATE "204 NO CONTENT"
 
 echo "try to upload rpm to non-existant repo"
-$CURL -F rpm=@res/$TESTRPM $HOST/admin/$TESTREPO1 | $CHECK_STATE "404 NOT FOUND"
+$CURL -F rpm=@res/$TESTRPM $HOST/admin/repos/$TESTREPO1 | $CHECK_STATE "404 NOT FOUND"
 
 echo "create $TESTREPO1"
-$CURL -X PUT $HOST/admin/$TESTREPO1 | $CHECK_STATE "201 CREATED"
-
-echo "check created repo"
-$CURL $HOST/$TESTREPO1 | $CHECK_STATE "200 OK"
+$CURL -X PUT $HOST/admin/repos/$TESTREPO1 | $CHECK_STATE "201 CREATED"
 
 echo "try to create $TESTREPO1 again"
-$CURL -X PUT $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
+$CURL -X PUT $HOST/admin/repos/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
 
 echo "upload rpm to $TESTREPO1"
-$CURL -F rpm=@res/$TESTRPM $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
+$CURL -F rpm=@res/$TESTRPM $HOST/admin/repos/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
 
 echo "check metadata of uploaded rpm"
-$CURL $HOST/admin/$TESTREPO1/$TESTRPM/info -i -s | grep "Name.*: foo"
+$CURL $HOST/admin/repos/$TESTREPO1/$TESTRPM/info -i -s | grep "Name.*: foo"
 
 echo "try to upload rpm to $TESTREPO1 again"
-$CURL -F rpm=@res/$TESTRPM $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "409 CONFLICT"
+$CURL -F rpm=@res/$TESTRPM $HOST/admin/repos/$TESTREPO1  -i -s | $CHECK_STATE "409 CONFLICT"
 
 echo "create $TESTREPO2"
-$CURL -X PUT $HOST/admin/$TESTREPO2 -i -s | $CHECK_STATE "201 CREATED"
+$CURL -X PUT $HOST/admin/repos/$TESTREPO2 -i -s | $CHECK_STATE "201 CREATED"
 
 echo "create empty repo3"
-$CURL -X PUT $HOST/admin/$TESTREPO3 -i -s | $CHECK_STATE "201 CREATED"
+$CURL -X PUT $HOST/admin/repos/$TESTREPO3 -i -s | $CHECK_STATE "201 CREATED"
 
 echo "update all metadata"
 $CURL $HOST/admin/update -i -s | $CHECK_STATE "204 NO CONTENT"
@@ -80,7 +83,7 @@ if $TEST_YUM; then
     echo "rpm found in repo: " $($YUM info foo | grep "testrepo1")
 fi
 
-$CURL -X STAGE $HOST/admin/$TESTREPO1/$TESTRPM/stageto/testrepo2
+$CURL -X STAGE $HOST/admin/repos/$TESTREPO1/$TESTRPM/stageto/testrepo2
 
 if $TEST_YUM; then
     echo "search for rpm via yum"
@@ -91,15 +94,15 @@ if $TEST_YUM; then
 fi
 
 echo "replace repo3 with a link to repo2"
-$CURL -X DELETE $HOST/admin/$TESTREPO3 -i -s | $CHECK_STATE "204 NO CONTENT"
-$CURL -X PUT $HOST/admin/$TESTREPO3?link_to=testrepo2 -i -s | $CHECK_STATE "201 CREATED"
+$CURL -X DELETE $HOST/admin/repos/$TESTREPO3 -i -s | $CHECK_STATE "204 NO CONTENT"
+$CURL -X PUT $HOST/admin/repos/$TESTREPO3?link_to=testrepo2 -i -s | $CHECK_STATE "201 CREATED"
 
 echo "check for repo links"
-$CURL $HOST/admin/$TESTREPO1/is_link -i -s | grep "false"
-$CURL $HOST/admin/$TESTREPO3/is_link -i -s | grep "true"
+$CURL $HOST/admin/repos/$TESTREPO1/is_link -i -s | grep "false"
+$CURL $HOST/admin/repos/$TESTREPO3/is_link -i -s | grep "true"
 
 echo "try to relink from repo3 to repo2"
-$CURL -X PUT $HOST/admin/$TESTREPO3?link_to=testrepo2 -i -s | $CHECK_STATE "201 CREATED"
+$CURL -X PUT $HOST/admin/repos/$TESTREPO3?link_to=testrepo2 -i -s | $CHECK_STATE "201 CREATED"
 
 if $TEST_YUM; then
     echo "search for rpm via yum"
@@ -113,31 +116,31 @@ fi
 echo "tear down test repos"
 
 echo "try to remove non-empty $TESTREPO2"
-$CURL -X DELETE $HOST/admin/$TESTREPO2  -i -s | $CHECK_STATE "409 CONFLICT"
+$CURL -X DELETE $HOST/admin/repos/$TESTREPO2  -i -s | $CHECK_STATE "409 CONFLICT"
 
 echo "remove rpm"
-$CURL -X DELETE $HOST/admin/$TESTREPO2/$TESTRPM -i -s | $CHECK_STATE "204 NO CONTENT"
+$CURL -X DELETE $HOST/admin/repos/$TESTREPO2/$TESTRPM -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "try to remove rpm that was marked to be removed"
-$CURL -X DELETE $HOST/admin/$TESTREPO2/$TESTRPM -i -s | $CHECK_STATE "204 NO CONTENT"
+$CURL -X DELETE $HOST/admin/repos/$TESTREPO2/$TESTRPM -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "update repo, commit all outstanding actions"
 $CURL $HOST/admin/update -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "try to remove rpm that was removed already"
-$CURL -X DELETE $HOST/admin/$TESTREPO2/$TESTRPM  -i -s | $CHECK_STATE "404 NOT FOUND"
+$CURL -X DELETE $HOST/admin/repos/$TESTREPO2/$TESTRPM  -i -s | $CHECK_STATE "404 NOT FOUND"
 
 echo "remove empty repo $TESTREPO1"
-$CURL -X DELETE $HOST/admin/$TESTREPO1  -i -s | $CHECK_STATE "204 NO CONTENT"
+$CURL -X DELETE $HOST/admin/repos/$TESTREPO1  -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "remove empty repo $TESTREPO2"
-$CURL -X DELETE $HOST/admin/$TESTREPO2  -i -s | $CHECK_STATE "204 NO CONTENT"
+$CURL -X DELETE $HOST/admin/repos/$TESTREPO2  -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "remove repo link $TESTREPO3"
-$CURL -X DELETE $HOST/admin/$TESTREPO3  -i -s | $CHECK_STATE "204 NO CONTENT"
+$CURL -X DELETE $HOST/admin/repos/$TESTREPO3  -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "try to remove repo link $TESTREPO3 that was removed already"
-$CURL -X DELETE $HOST/admin/$TESTREPO3  -i -s | $CHECK_STATE "404 NOT FOUND"
+$CURL -X DELETE $HOST/admin/repos/$TESTREPO3  -i -s | $CHECK_STATE "404 NOT FOUND"
 
 echo "trying to shutdown service, may fail when running as wsgi service"
 $CURL -X POST $HOST/admin/shutdown
