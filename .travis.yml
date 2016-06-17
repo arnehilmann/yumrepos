@@ -14,6 +14,7 @@ install:
   - pyb install_dependencies
 script:
   - pyb -X
+  - cat target/reports/coverage
 after_success:
   - scripts/build-rpm
   - coveralls --verbose
