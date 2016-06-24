@@ -26,7 +26,7 @@ if yum --version &> /dev/null; then
     YUM="yum -c $YUM_CONF"
     echo "'yum' command found"
 
-    $(dirname $0)/create-yum-conf $REPOS $TESTREPO1 $TESTREPO2 $TESTREPO3 > $YUM_CONF
+    $(dirname $0)/create-yum-conf $REPOS repos/$TESTREPO1 repos/$TESTREPO2 repos/$TESTREPO3 > $YUM_CONF
 fi
 
 trap "echo; echo; echo AN ERROR OCCURED; echo; exit 1" ERR
