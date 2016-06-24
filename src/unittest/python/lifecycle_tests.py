@@ -17,11 +17,11 @@ class Test(unittest.TestCase):
 
     PORT = 28080
     HOST = "http://localhost:%i" % PORT
-    REPO_DIR = os.path.join(os.getcwd(), "target", "repos")
+    REPO_DIR = os.path.join(os.getcwd(), "target")
 
     def test(self):
         def testrunner():
-            application = create_application(FsBackend(Test.REPO_DIR))
+            application = create_application(FsBackend(os.path.join(Test.REPO_DIR, "repos")))
             application.run("0.0.0.0", self.PORT)
 
         t = threading.Thread(target=testrunner)
