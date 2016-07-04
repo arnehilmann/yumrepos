@@ -39,4 +39,4 @@ deploy:
       tags: true
       distributions: sdist
       repo: arnehilmann/yum-repos
-      condition: $TRAVIS_PYTHON_VERSION = "2.6"
+      condition: $TRAVIS_PYTHON_VERSION = "2.7"
