@@ -49,3 +49,16 @@ def set_properties(project):
     project.set_property('copy_resources_target', '$dir_dist')
     project.get_property('copy_resources_glob').extend(['setup.*cfg'])
     project.get_property('filter_resources_glob').extend(['**/setup.*cfg'])
+
+    project.set_property('flake8_verbose_output', True)
+    project.set_property('flake8_include_test_sources', True)
+    project.set_property('flake8_ignore', 'E501,E402,E731')
+    project.set_property('flake8_break_build', True)
+
+    FROSTED_BARE_EXCEPT_WARNING = 'W101'
+    project.set_property('frosted_ignore', [FROSTED_BARE_EXCEPT_WARNING])
+
+    project.set_property('verbose', True)
+
+    project.set_property('coverage_threshold_warn', 50)
+    project.set_property('coverage_break_build', False)
