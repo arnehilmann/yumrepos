@@ -1,20 +1,23 @@
 #!/bin/bash
 set -e -E -u
 
-VIRTUALENV_OPTS=${1:+ -p /usr/bin/python$1}
+PYTHON_VERSION=${1:-}
 
-rm -rf venv
-virtualenv venv $VIRTUALENV_OPTS
+VIRTUALENV_OPTS=${PYTHON_VERSION:+ -p /usr/bin/python$PYTHON_VERSION}
+VENV=ve$PYTHON_VERSION
+
+rm -rf $VENV
+virtualenv $VENV $VIRTUALENV_OPTS
 
 set +u
-. venv/bin/activate
+. $VENV/bin/activate
 set -u
 
-for LIB in $(find $PWD/src/main/python -not -name "__pycache__"); do
-    ln -sf $LIB venv/lib/python*/site-packages/
+for LIB in $(find $PWD/src/main/python -mindepth 1 -maxdepth 1 -and -not -name "__pycache__"); do
+    ln -sfv $LIB $VENV/lib/python*/site-packages/
 done
 for BIN in $(find $PWD/src/main/scripts -type f); do
-    ln -sf $BIN venv/bin/
+    ln -sf $BIN $VENV/bin/
 done
 
 pip install --upgrade setuptools
