@@ -10,14 +10,14 @@ use_plugin("python.distutils")
 use_plugin('copy_resources')
 use_plugin('filter_resources')
 
-name = "yum-repos"
-summary = "yum-repos: simple yum repositories with minimal rest api"
-url = "https://github.com/arnehilmann/yum-repos"
-version = "0.8.5"
+name = "yumrepos"
+summary = "yumrepos: simple yum repositories with minimal rest api"
+url = "https://github.com/arnehilmann/yumrepos"
+version = "0.8.6"
 
 authors = [Author('Arne Hilmann', 'arne.hilmann@gmail.com')]
 
-description = """yum-repos
+description = """yumrepos
 - serve yum repositories as simple folders
 - ... via web server
 - offer rest api for
