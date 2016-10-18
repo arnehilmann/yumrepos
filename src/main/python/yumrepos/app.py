@@ -106,7 +106,7 @@ def add_admin_routes(app, backend, allowed_extensions):
             return ('Shutdown NOW', 200)
         return ('Not in Standalone mode: Shutdown FORBIDDEN', 403)
 
-    app.register_blueprint(admin, url_prefix='/admin')
+    app.register_blueprint(admin, url_prefix='/admin/v1')
 
 
 def create_application(backend):
