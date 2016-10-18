@@ -79,7 +79,7 @@ if "check_output" not in dir(subprocess):
 class FsBackend(object):
     def __init__(self, repos_folder, createrepo_bins=['createrepo_c', 'createrepo']):
         self.repos_folder = os.path.abspath(repos_folder)
-        self.createrepo_bin = 'touch'   # simplest fallback
+        self.createrepo_bin = None
         for createrepo_bin in createrepo_bins:
             if find_executable(createrepo_bin):
                 self.createrepo_bin = createrepo_bin
@@ -98,12 +98,15 @@ class FsBackend(object):
 
     def create_repo_metadata(self, reponame):
         log.debug("creating metadata for %s" % os.path.join(self.repos_folder, reponame))
-        with open(os.devnull, "w") as fnull:
-            subprocess.check_call([self.createrepo_bin,
-                                   "--update",
-                                   os.path.join(self.repos_folder, reponame)],
-                                  stdout=fnull,
-                                  stderr=fnull)
+        if self.createrepo_bin:
+            with open(os.devnull, "w") as fnull:
+                subprocess.check_call([self.createrepo_bin,
+                                       "--update",
+                                       os.path.join(self.repos_folder, reponame)],
+                                      stdout=fnull,
+                                      stderr=fnull)
+        else:
+            touch(os.path.join(self.repos_folder, reponame, "repodata.faked"))
 
     def create_repo(self, reponame):
         try:
