@@ -18,15 +18,14 @@ script:
 after_success:
   - scripts/build-rpm
   - coveralls --verbose
-  - cp -R target/dist/*/dist .
 deploy:
   - provider: releases
     api_key:
       secure: QzO7L/azRkL6AAOhdglX76pHNfOdBw2xZ50hW0SQC3QSwDISTHM2egJ0KlvL4nq/44mlx5Fa7n1U42DQHI1IGeW23eJ45dEoEnx7MUnNPEhGrxS2wA8l/yXJ7fFXfRltGDZpHQ3rDxlf/ybs/1YV0/7fXDPB2LIpE5n6XgDixRUpbgLQ2/kkrnKgJvjm5AQGvznJRRvKPGVjgfPiz+j24UYd0rVPZm8m4gVsEFbOS+TKSdT3uBh30Vr8R/dRu7uW+M8iYvcjy9YKkj8gOR6jHVAKvcLzQF/eySj+qtFVkHKHML+0sdDa5eE6QFrSGYj9ZPIboLfCfAvcU7RDtP6ZhHZYAPj3sDmqlBLkHxo3SEwbILvqyQSeNI/bQqJbjcHkbZ50curUMmZEdyJvr0BEYTMyt7nF3dfxOU64b2cIdDtiShLF4OzUxuCH72o/Nfjv7iJxmIt/lQz80Gh4pVfqbjQQApBw7ih0GJZaKdJQ7qMxXbeWEIr9WI1QKOjffuYlNiLlNeUPAapfNHL8XDL+twQB8iNpxnyjoEic6qLPvxn85+jsUm4vc3433HU3eSaspI4y6NYmrOme6IRieZal26ShHifFPS47Vr2gFU2s+MnM0OXuRaYFzaIyZ1VWUbh2h+Rx91qAHHha9VlRmXruWpj2B55v+tuuF+tbsOoKuO8=
     file:
-      - $(find target/dist/yum-repos-*/dist/*.noarch.rpm)
-      - $(find target/dist/yum-repos-*/dist/*.src.rpm)
-      - $(find target/dist/yum-repos-*/dist/*.whl)
+      - $(find target/dist/yumrepos-*/dist/*.noarch.rpm)
+      - $(find target/dist/yumrepos-*/dist/*.src.rpm)
+      - $(find target/dist/yumrepos-*/dist/*.whl)
     skip_cleanup: true
     on:
       tags: true
@@ -38,5 +37,5 @@ deploy:
     on:
       tags: true
       distributions: sdist
-      repo: arnehilmann/yum-repos
+      repo: arnehilmann/yumrepos
       condition: $TRAVIS_PYTHON_VERSION = "2.7"
