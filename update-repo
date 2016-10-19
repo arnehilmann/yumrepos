@@ -3,7 +3,8 @@ set -e -E -o pipefail
 
 SED=gsed
 
-rm -f *.rpm
+git clean -fx
+git rm *.rpm
 
 cp ../yumrepos-behind-nginx-on-centos7/tmp/*.rpm .
 
