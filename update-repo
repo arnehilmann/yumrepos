@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e -E -o pipefail
+
+
+exit 0
+
+rm -rf repodata/*
+git co -- repodata/
+git rm -f repodata/*
+
+docker run -v $PWD:/repo local/centos7-with-createrepo
+
+git add repodata/*
