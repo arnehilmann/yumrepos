@@ -1,0 +1,3 @@
+#!/bin/sh
+
+docker build -t local/$(basename $PWD) --build-arg http_proxy=$http_proxy --build-arg https_proxy=$https_proxy .
