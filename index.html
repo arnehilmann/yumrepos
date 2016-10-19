@@ -4,9 +4,10 @@
 This is a yum repository!
 
 Access via
-<code>yum -c yumrepos.conf install yumrepos-behind-nginx-on-centos7</code>
+<pre><code>yum -c yumrepos.conf install yumrepos-behind-nginx-on-centos7</code></pre>
 with the following yumrepos.conf file:
-<code>
+
+<p><pre><code>
 [main]
 plugins=1
 
@@ -16,7 +17,7 @@ baseurl=https://arnehilmann.github.io/yumrepos/
 gpgcheck=0
 sslverify=1
 enabled=1
-</code>
+</code></pre></p>
 
 Metadata can be found at
 <a href="repodata/repomd.xml">repodata/repomd.xml</a>.
