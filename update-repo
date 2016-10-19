@@ -4,7 +4,7 @@ set -e -E -o pipefail
 SED=gsed
 
 git clean -fx
-git rm *.rpm
+git rm *.rpm || :
 
 cp ../yumrepos-behind-nginx-on-centos7/tmp/*.rpm .
 
@@ -17,10 +17,11 @@ curl -OLs "$DOWNLOAD_URL"
 
 echo "cleanung repodata"
 rm -rf repodata/*
-git co -- repodata/
+git checkout -- repodata/
 git rm -f repodata/*
 
 echo "generating repodata"
 docker run -v $PWD:/repo local/centos7-with-createrepo
 
-git add repodata/*
+git add *.rpm repodata/*
+git status
