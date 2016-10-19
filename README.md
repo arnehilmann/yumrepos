@@ -5,13 +5,10 @@
 
 Minimal Yum Repo Server, with ReST API and Filesystem Backend
 
-## tl;dr for end users
+## tl;dr for centos7 end users
 
-```
-# point your browser to https://github.com/arnehilmann/yumrepos/releases/latest
-# download rpm suitable for your python version
-yum install yumrepos-*.rpm
-```
+follow instructions in our [centos7-specific repository](https://arnehilmann.github.io/yumrepos/index.html)
+
 
 ## tl;dr for developers
 
