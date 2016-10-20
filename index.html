@@ -1,28 +1,32 @@
 <html>
 
 <body>
-    <p>
-    This is a yum repository for the yumrepos rpms and its centos7 configuration! <br/>
-    Its Metadata can be found at <a href="repodata/repomd.xml">repodata/repomd.xml</a>.
-    </p>
+    <div>
+        <h1>YumRepos Repo</h1>
+        <p>
+        This is a yum repository for the yumrepos rpms and its centos7 configuration! <br/>
+        Its Metadata can be found at <a href="repodata/repomd.xml">repodata/repomd.xml</a>.
+        </p>
 
-    <p>
-    Access via
-    <pre><code>yum -c yumrepos.conf install yumrepos-behind-nginx-on-centos7</code></pre>
-    with the following yumrepos.conf file (download <a href="yumrepos.conf">yumrepos.conf</a>
-    directly or copy-n-paste the following code snippet):
-    <pre><code>
-[main]
-plugins=1
+        <h3>Prerequisites</h3>
+        <ul>
+            <li>centos7 machine</li>
+            <li>including root access</li>
+            <li>internet access</li>
+        </ul>
 
-[yumrepos]
-name=the home of the yum repos
-baseurl=https://arnehilmann.github.io/yumrepos/
-gpgcheck=0
-sslverify=1
-enabled=1
-    </code></pre>
-    </p>
+        <h3>Installation</h3>
+        <ol>
+            <li>enable epel repos (as root user): <code>yum install epel-release</code></li>
+            <li>enable this repo by putting <a href="yumrepos.repo">yumrepos.repo</a> into <code>/etc/yum.repos.d/</code>.</li>
+            <li>install yumrepos configuration for centos7: <code>yum install yumrepos-behind-nginx-on-centos7</code></li>
+            <li>generate first key/secret api-key: <code>generate-yumrepos-key-pair</code></li>
+        </ol>
 
+        <h3>Usage</h3>
+        see <a href="https://github.com/arnehilmann/yumrepos#rest-api">API</a>.
+    </div>
+
+    <div>Questions/Comments? <a href="mailto:arne.hilmann@gmail.com">mailto: arne.hilmann@gmail.com</a></div>
 </body>
 </html>
