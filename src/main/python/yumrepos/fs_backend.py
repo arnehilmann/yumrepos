@@ -115,6 +115,8 @@ class FsBackend(object):
         except OSError as e:
             if e.errno != 17:
                 log.error(e)
+                if e.errno == 2:
+                    return ('', 404)
                 raise
         log.info("repo %s created!" % reponame)
         self.create_repo_metadata(reponame)
