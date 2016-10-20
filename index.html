@@ -1,32 +1,80 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+  <title>The YumRepos Repository :o)</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- FONT
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="images/favicon.png">
+
+</head>
 <body>
-    <div>
+
+  <!-- Primary Page Layout
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <div class="container">
+    <div class="row">
+      <div class="column" style="margin-top: 15%">
+
         <h1>YumRepos Repo</h1>
         <p>
-        This is a yum repository for the yumrepos rpms and its centos7 configuration! <br/>
-        Its Metadata can be found at <a href="repodata/repomd.xml">repodata/repomd.xml</a>.
+        This is a yum repository for the yumrepos rpms and its centos7 configuration!
         </p>
 
         <h3>Prerequisites</h3>
+        <p>
         <ul>
-            <li>centos7 machine</li>
-            <li>including root access</li>
+            <li>centos7 machine, including root access</li>
             <li>internet access</li>
         </ul>
+        </p>
 
         <h3>Installation</h3>
+        <p>
         <ol>
             <li>enable epel repos (as root user): <code>yum install epel-release</code></li>
             <li>enable this repo by putting <a href="yumrepos.repo">yumrepos.repo</a> into <code>/etc/yum.repos.d/</code>.</li>
             <li>install yumrepos configuration for centos7: <code>yum install yumrepos-behind-nginx-on-centos7</code></li>
             <li>generate first key/secret api-key: <code>generate-yumrepos-key-pair</code></li>
         </ol>
+        </p>
 
-        <h3>Usage</h3>
-        see <a href="https://github.com/arnehilmann/yumrepos#rest-api">API</a>.
+        <h4>Want to upload/change/admin these repos?</h4>
+        <p>
+        Have a look at the <a href="https://github.com/arnehilmann/yumrepos#rest-api">API</a>.
+        </p>
+
+        <h4>Questions/Comments?</h4>
+        <p>
+        See the <a href="https://github.com/arnehilmann/yumrepos">admin part</a>
+        or the <a href="https://github.com/arnehilmann/yumrepos-behind-nginx-on-centos7">centos7-specific configuration</a>
+        of this installation.
+        </p>
+      </div>
     </div>
+  </div>
 
-    <div>Questions/Comments? <a href="mailto:arne.hilmann@gmail.com">mailto: arne.hilmann@gmail.com</a></div>
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
 </body>
 </html>
+<html>
