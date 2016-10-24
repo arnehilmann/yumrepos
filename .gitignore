@@ -2,3 +2,4 @@ ve
 target
 .coverage
 *.pyc
+.*.swp
