@@ -1,0 +1,1 @@
+pandoc -s -S index.md -V title="" -o index.html
