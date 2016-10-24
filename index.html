@@ -45,41 +45,10 @@
         </ol>
         </p>
 
-        <h4>First Usage</h4>
-        <h5>on yumrepos server, as root</h5>
+        <h4>Next Steps</h4>
         <p>
-        generate a key/secret pair with
-            <code>generate-yumrepos-key-pair</code>, follow instructions to store these credentials
-        </p>
-
-        <h5>on some client trying to use the new yumrepos server, as any user with credentials</h5>
-        <p>
-        <ol>
-            <li>create toplevel <code>foo</code> repository:
-                <code>curl -k -K yumrepos.credentials https://[YUMREPOS_SERVER]/admin/v1/repos/foo -X PUT</code></li>
-            <li>upload first rpm:
-                <code>curl -k -K yumrepos.credentials https://[YUMREPOS_SERVER]/admin/v1/repos/foo -F rpm=@[YOUR_RPM_FILE]</code></li>
-            <li>check repo via <a href="/repos/foo">web browser</a></li>
-            <li>update repo metadata:<br/>
-                <code>curl -k -K yumrepos.credentials https://[YUMREPOS_SERVER]/admin/v1/update</code></li>
-            <li>check repo via <code>yum</code> (finally):
-                <ul>
-                    <li>save the following config as <code>foo.repo</code>:
-                        <pre><code>[foo]
-name=the foo repo
-baseurl=https://[YUMREPOS_SERVER]/repos/foo
-gpgcheck=0
-enabled=1
-sslverify=0</code></pre>
-                    </li>
-                    <li>
-                        <code>yum -c foo.repo search [YOUR_RPM_FILE]</code>
-                    </li>
-                </ul>
-            </li>
-            <li><b>Tadahh!</b>
-        </ol>
-        </p>
+        Follow the instructions on your new shiny yumrepos server:
+        <code>https://[YUMREPOS_SERVER]/</code>
 
         <h4>Further Questions/Comments?</h4>
         <p>
