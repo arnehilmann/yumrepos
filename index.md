@@ -32,12 +32,12 @@ This is a yum repository for the yumrepos rpms and its centos7 configuration!
 
 #### Installation
 
-1. enable epel repos and yum utilities(as root user):<br/>
-    ```yum install epel-release yum-utils```
+1. enable epel repos and yum utilities (as root user):<br/>
+    ```sudo yum install epel-release yum-utils```
 2. enable this repo:<br/>
-    ```yum-config-manager --add-repo https://arnehilmann.github.io/yumrepos/yumrepos.repo```
+    ```sudo yum-config-manager --add-repo https://arnehilmann.github.io/yumrepos/yumrepos.repo```
 3. install yumrepos configuration for centos7:<br/>
-    ```yum install yumrepos-behind-nginx-on-centos7```
+    ```sudo yum install yumrepos-behind-nginx-on-centos7```
 
 
 #### Next Steps
