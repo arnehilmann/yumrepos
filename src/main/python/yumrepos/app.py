@@ -24,20 +24,9 @@ def add_repos_routes(app, backend):
 def add_admin_routes(app, backend, allowed_extensions):
     admin = Blueprint('admin', __name__)
 
-    def is_allowed_file(filename):
-        return '.' in filename and \
-            filename.rsplit('.', 1)[1] in allowed_extensions
-
-    def is_allowed_reponame(reponame):
-        if reponame.startswith("repodata"):
-            return False
-        if reponame.startswith("."):
-            return False
-        return True
-
     @admin.route('/ready')
     def is_ready():
-        log.info("/ready called (log wurgs)")
+        log.info("/ready called (log)")
         return ('', 204)
 
     @admin.route('/update')
@@ -48,7 +37,7 @@ def add_admin_routes(app, backend, allowed_extensions):
 
     @admin.route('/repos/<path:reponame>', methods=['PUT'])
     def create_repo(reponame):
-        if not is_allowed_reponame(reponame):
+        if not backend.is_allowed_reponame(reponame):
             return ('%s not an allowed reponame' % reponame, 403)
         log.info("create_repo %s" % reponame)
         if 'link_to' in request.args:
@@ -73,7 +62,7 @@ def add_admin_routes(app, backend, allowed_extensions):
     def upload_rpm(reponame):
         rpm_file = request.files['rpm']
         # import pdb; pdb.set_trace()
-        if rpm_file and is_allowed_file(rpm_file.filename):
+        if rpm_file and backend.is_allowed_file(rpm_file.filename):
             return backend.upload_rpm(reponame, rpm_file)
 
         return "%s not a valid rpm" % rpm_file.filename, 400

@@ -79,34 +79,69 @@ if "check_output" not in dir(subprocess):
 class FsBackend(object):
     def __init__(self, repos_folder, createrepo_bins=['createrepo_c', 'createrepo']):
         self.repos_folder = os.path.abspath(repos_folder)
+        self.md_folder = os.path.join(self.repos_folder, ".metadata")
         self.createrepo_bin = None
         for createrepo_bin in createrepo_bins:
             if find_executable(createrepo_bin):
                 self.createrepo_bin = createrepo_bin
                 break
 
-        try:
-            os.mkdir(self.repos_folder)
-        except OSError as e:
-            if e.errno != 17:
-                raise
+        for dirname in (self.repos_folder, self.md_folder):
+            try:
+                os.mkdir(dirname)
+            except OSError as e:
+                if e.errno != 17:
+                    raise
 
         log.info("repo folder: %s" % self.repos_folder)
+        log.info("md folder: %s" % self.md_folder)
         log.info("createrepo binary: %s" % self.createrepo_bin)
 
     # repo stuff
 
+    @staticmethod
+    def is_allowed_file(filename):
+        return '.' in filename and \
+            filename.rsplit('.', 1)[1] in allowed_extensions
+
+    @staticmethod
+    def is_allowed_reponame(reponame):
+        if reponame.startswith("repodata"):
+            return False
+        if reponame.startswith("."):
+            return False
+        return True
+
+    def create_rpm_metadata(self, filename):
+        md_dir = os.path.join(self.md_folder, os.path.basename(filename))
+        log.debug("md dir: %s" % md_dir)
+        if os.path.exists(md_dir):
+            return
+        os.mkdir(md_dir)
+        subprocess.check_call([
+            self.createrepo_bin,
+            "-n", filename,
+            "-o", md_dir,
+            "--update",
+            os.path.dirname(filename)])
+
     def create_repo_metadata(self, reponame):
         log.debug("creating metadata for %s" % os.path.join(self.repos_folder, reponame))
-        if self.createrepo_bin:
-            with open(os.devnull, "w") as fnull:
-                subprocess.check_call([self.createrepo_bin,
-                                       "--update",
-                                       os.path.join(self.repos_folder, reponame)],
-                                      stdout=fnull,
-                                      stderr=fnull)
-        else:
+        if not self.is_allowed_reponame(reponame):
+            log.error("invalid")
+            return
+        if not self.createrepo_bin:
             touch(os.path.join(self.repos_folder, reponame, "repodata.faked"))
+            return
+        with open(os.devnull, "w") as fnull:
+            for filename in os.listdir(os.path.join(self.repos_folder, reponame)):
+                if filename.endswith("rpm"):
+                    self.create_rpm_metadata(os.path.join(self.repos_folder, reponame, filename))
+            subprocess.check_call([self.createrepo_bin,
+                                   "--update",
+                                   os.path.join(self.repos_folder, reponame)],
+                                   stdout=fnull,
+                                   stderr=fnull)
 
     def create_repo(self, reponame):
         try:
@@ -215,7 +250,7 @@ class FsBackend(object):
     def walk_repos(self):
         for dirpath, dirnames, filenames in os.walk(self.repos_folder):
             dirnames[:] = [d for d in dirnames if d != "repodata"]
-            yield dirpath.replace(self.repos_folder, '.')
+            yield dirpath.replace(self.repos_folder, '')[1:]
 
     def update_all_metadata(self):
         self.commit_actions()
