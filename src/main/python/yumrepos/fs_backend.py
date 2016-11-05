@@ -77,10 +77,11 @@ if "check_output" not in dir(subprocess):
 
 
 class FsBackend(object):
-    def __init__(self, repos_folder, createrepo_bins=['createrepo_c', 'createrepo']):
+    def __init__(self, repos_folder, createrepo_bins=['createrepo_c', 'createrepo'], allowed_extensions=None):
         self.repos_folder = os.path.abspath(repos_folder)
         self.md_folder = os.path.join(self.repos_folder, ".metadata")
         self.createrepo_bin = None
+        self.allowed_extensions = allowed_extensions if allowed_extensions else set(["rpm"])
         for createrepo_bin in createrepo_bins:
             if find_executable(createrepo_bin):
                 self.createrepo_bin = createrepo_bin
@@ -99,10 +100,9 @@ class FsBackend(object):
 
     # repo stuff
 
-    @staticmethod
-    def is_allowed_file(filename):
+    def is_allowed_file(self, filename):
         return '.' in filename and \
-            filename.rsplit('.', 1)[1] in allowed_extensions
+            filename.rsplit('.', 1)[1] in self.allowed_extensions
 
     @staticmethod
     def is_allowed_reponame(reponame):
@@ -140,8 +140,8 @@ class FsBackend(object):
             subprocess.check_call([self.createrepo_bin,
                                    "--update",
                                    os.path.join(self.repos_folder, reponame)],
-                                   stdout=fnull,
-                                   stderr=fnull)
+                                  stdout=fnull,
+                                  stderr=fnull)
 
     def create_repo(self, reponame):
         try:
