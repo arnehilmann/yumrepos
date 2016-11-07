@@ -110,20 +110,24 @@ class FsBackend(object):
             return False
         if reponame.startswith("."):
             return False
+        if reponame.endswith(".rpm"):
+            return False
         return True
 
     def create_rpm_metadata(self, filename):
-        md_dir = os.path.join(self.md_folder, os.path.basename(filename))
+        rpm_name = os.path.basename(filename)
+        repo_dir = os.path.dirname(filename)
+        md_dir = os.path.join(self.md_folder, rpm_name)
         log.debug("md dir: %s" % md_dir)
         if os.path.exists(md_dir):
             return
         os.mkdir(md_dir)
         subprocess.check_call([
             self.createrepo_bin,
-            "-n", filename,
+            "-n", rpm_name,
             "-o", md_dir,
             "--update",
-            os.path.dirname(filename)])
+            repo_dir])
 
     def create_repo_metadata(self, reponame):
         log.debug("creating metadata for %s" % os.path.join(self.repos_folder, reponame))
