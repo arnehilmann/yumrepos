@@ -168,7 +168,6 @@ class FsBackend(object):
             cmd = [self.mergerepo_bin,
                    "-o", repo_path,
                    "--omit-baseurl"] + ["--repo=%s" % os.path.join(self.md_folder, rpm_name) for rpm_name in repos]
-            print(cmd)
             subprocess.check_call(cmd, stdout=fnull, stderr=fnull)
             # subprocess.check_call([self.createrepo_bin,
             #                        "--update",
