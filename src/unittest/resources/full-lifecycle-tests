@@ -23,7 +23,7 @@ TEST_YUM=false
 if yum --version &> /dev/null; then
     TEST_YUM=true
     YUM_CONF=$OUT/yum.conf
-    YUM="yum -c $YUM_CONF"
+    YUM="yum -c $YUM_CONF --disablerepo=* --enablerepo=testrepo*"
     echo "'yum' command found"
 
     $(dirname $0)/create-yum-conf $REPOS repos/$TESTREPO1 repos/$TESTREPO2 repos/$TESTREPO3 > $YUM_CONF
