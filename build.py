@@ -40,6 +40,7 @@ def set_properties(project):
     project.build_depends_on('requests')
 
     project.depends_on("flask")
+    project.depends_on("werkzeug")
     try:
         import functools.lru_cache
     except ImportError:
