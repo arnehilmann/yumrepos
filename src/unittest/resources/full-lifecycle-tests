@@ -40,10 +40,10 @@ $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO3 -s &> /dev/null || :
 echo "check if repos available"
 $CURL $REPOS
 
-echo "check if yum-repo service is up"
-echo $CURL $HOST/json
-$CURL $HOST/json
-$CURL $HOST/json | $CHECK_STATE "200 OK"
+# echo "check if yum-repo service is up"
+# echo $CURL $HOST/json
+# $CURL $HOST/json
+# $CURL $HOST/json | $CHECK_STATE "200 OK"
 
 echo "check if admin service is ready"
 $CURL $HOST/admin/v1/ready | $CHECK_STATE "204 NO CONTENT"
@@ -156,6 +156,9 @@ $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3  -i -s | $CHECK_STATE "204 NO CO
 
 echo "try to remove repo link $TESTREPO3 that was removed already"
 $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3  -i -s | $CHECK_STATE "404 NOT FOUND"
+
+echo "calling update a last time, checking cleanup of metadata"
+$CURL $HOST/admin/v1/update -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "trying to shutdown service, may fail when running as wsgi service"
 $CURL -X POST $HOST/admin/v1/shutdown

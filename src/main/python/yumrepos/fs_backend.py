@@ -156,11 +156,10 @@ class FsBackend(object):
             os.link(filename, linked_filename)
 
     def create_repo_metadata(self, reponame):
+        if not self.is_allowed_reponame(reponame):
+            return
         repo_path = os.path.join(self.repos_folder, reponame)
         log.debug("creating metadata for %s" % repo_path)
-        if not self.is_allowed_reponame(reponame):
-            log.error("invalid")
-            return
         if not self.createrepo_bin:
             touch(os.path.join(repo_path, "repodata.faked"))
             return
@@ -292,10 +291,17 @@ class FsBackend(object):
         self.commit_actions()
         for reponame in self.walk_repos():
             self.create_repo_metadata(reponame)
+        for rpmname in os.listdir(self.md_folder):
+            if rpmname == "__empty__":
+                continue
+            nr_links = os.stat(os.path.join(self.md_folder, rpmname, rpmname)).st_nlink
+            if nr_links <= 1:
+                log.info("rpm %s not referenced, removing its metadata" % rpmname)
+                shutil.rmtree(os.path.join(self.md_folder, rpmname))
 
     def commit_actions(self):
         for dirpath, dirnames, filenames in os.walk(self.repos_folder):
-            dirnames[:] = [d for d in dirnames if d != "repodata"]
+            dirnames[:] = [d for d in dirnames if self.is_allowed_reponame(d)]
             for filename in filenames:
                 filename, action = self.split_action(filename)
                 if not action:
