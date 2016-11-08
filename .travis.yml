@@ -9,7 +9,7 @@ services:
   - docker
 install:
   - sudo apt-get install -y rpm yum
-  - sudo apt-get install -y createrepo_c || :
+  - set +e && sudo apt-get install -y createrepo_c && set -e
   - pip install coveralls
   - pip install pybuilder
   - pyb install_dependencies
