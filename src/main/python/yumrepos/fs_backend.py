@@ -160,7 +160,7 @@ class FsBackend(object):
             return
         repo_path = os.path.join(self.repos_folder, reponame)
         log.debug("creating metadata for %s" % repo_path)
-        if not self.createrepo_bin:
+        if not self.mergerepo_bin:
             touch(os.path.join(repo_path, "repodata.faked"))
             return
         with open(os.devnull, "w") as fnull:
@@ -174,7 +174,8 @@ class FsBackend(object):
                 repos.append("__empty__")
             cmd = [self.mergerepo_bin,
                    "-o", repo_path,
-                   "--omit-baseurl"] + ["--repo=%s" % os.path.join(self.md_folder, rpm_name) for rpm_name in repos]
+                   "--omit-baseurl"
+                   ] + ["--repo=%s" % os.path.join(self.md_folder, rpm_name) for rpm_name in repos]
             subprocess.check_call(cmd, stdout=fnull, stderr=fnull)
 
     def create_repo(self, reponame):
