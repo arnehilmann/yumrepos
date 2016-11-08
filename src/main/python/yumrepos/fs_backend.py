@@ -3,6 +3,7 @@ from distutils.spawn import find_executable
 from fnmatch import fnmatch
 import glob
 import os
+import re
 import shutil
 import subprocess
 
@@ -119,8 +120,9 @@ class FsBackend(object):
     # repo stuff
 
     def is_allowed_file(self, filename):
-        return '.' in filename and \
-            filename.rsplit('.', 1)[1] in self.allowed_extensions
+        return '.' in filename \
+            and filename.rsplit('.', 1)[1] in self.allowed_extensions \
+            and not filename.startswith(".")
 
     @staticmethod
     def is_allowed_reponame(reponame):
@@ -130,6 +132,7 @@ class FsBackend(object):
             return False
         if reponame.endswith(".rpm"):
             return False
+        return re.match("^[-_a-zA-Z0-9]+$", reponame)
         return True
 
     def create_rpm_metadata(self, filename):
@@ -137,15 +140,20 @@ class FsBackend(object):
         repo_dir = os.path.dirname(filename)
         md_dir = os.path.join(self.md_folder, rpm_name)
         log.debug("md dir: %s" % md_dir)
-        if os.path.exists(md_dir):
-            return
-        os.mkdir(md_dir)
-        subprocess.check_call([
-            self.createrepo_bin,
-            "-n", rpm_name,
-            "-o", md_dir,
-            "--update",
-            repo_dir])
+        if not os.path.exists(md_dir):
+            os.mkdir(md_dir)
+            subprocess.check_call([
+                self.createrepo_bin,
+                "-n", rpm_name,
+                "-o", md_dir,
+                "--update",
+                repo_dir])
+        linked_filename = os.path.join(md_dir, rpm_name)
+        if os.path.exists(linked_filename):
+            os.unlink(filename)
+            os.link(linked_filename, filename)
+        else:
+            os.link(filename, linked_filename)
 
     def create_repo_metadata(self, reponame):
         repo_path = os.path.join(self.repos_folder, reponame)
@@ -228,6 +236,7 @@ class FsBackend(object):
         try:
             mark_as_new(complete_filename)
             file.save(complete_filename)
+            self.create_rpm_metadata(complete_filename)
             return ('', 201)
         except IOError as e:
             if e.errno == 2:
