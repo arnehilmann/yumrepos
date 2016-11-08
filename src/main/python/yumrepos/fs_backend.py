@@ -80,8 +80,8 @@ if "check_output" not in dir(subprocess):
 class FsBackend(object):
     def __init__(self,
                  repos_folder,
-                 createrepo_bins=['createrepo_c', 'createrepo'],
-                 mergerepo_bins=['mergerepo_c', 'mergerepo'],
+                 createrepo_bins=['createrepo_c'],
+                 mergerepo_bins=['mergerepo_c'],
                  allowed_extensions=None):
         self.repos_folder = os.path.abspath(repos_folder)
         self.md_folder = os.path.join(self.repos_folder, ".metadata")
@@ -177,11 +177,6 @@ class FsBackend(object):
                    "-o", repo_path,
                    "--omit-baseurl"] + ["--repo=%s" % os.path.join(self.md_folder, rpm_name) for rpm_name in repos]
             subprocess.check_call(cmd, stdout=fnull, stderr=fnull)
-            # subprocess.check_call([self.createrepo_bin,
-            #                        "--update",
-            #                        os.path.join(self.repos_folder, reponame)],
-            #                       stdout=fnull,
-            #                       stderr=fnull)
 
     def create_repo(self, reponame):
         try:
