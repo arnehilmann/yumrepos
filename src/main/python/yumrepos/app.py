@@ -21,7 +21,7 @@ def add_repos_routes(app, backend):
     app.register_blueprint(repos, url_prefix='/json')
 
 
-def add_admin_routes(app, backend, allowed_extensions):
+def add_admin_routes(app, backend):
     admin = Blueprint('admin', __name__)
 
     @admin.route('/ready')
@@ -108,7 +108,7 @@ def add_admin_routes(app, backend, allowed_extensions):
 def create_application(backend):
     app = Flask(__name__)
 
-    add_repos_routes(app, backend)
-    add_admin_routes(app, backend, set(['rpm']))
+    # add_repos_routes(app, backend)
+    add_admin_routes(app, backend)
 
     return app
