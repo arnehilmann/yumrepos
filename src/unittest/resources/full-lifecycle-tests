@@ -51,6 +51,9 @@ $CURL $HOST/admin/v1/ready | $CHECK_STATE "204 NO CONTENT"
 echo "try to upload rpm to non-existant repo"
 $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "404 NOT FOUND"
 
+echo "try to upload non-existing rpm"
+$CURL -F rpm=@README.md $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "400 BAD REQUEST"
+
 echo "create invalid repo"
 $CURL -X PUT $HOST/admin/v1/repos/repodata | $CHECK_STATE "403 FORBIDDEN"
 
@@ -69,6 +72,9 @@ $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
 echo "upload rpm to $TESTREPO1"
 $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
 
+echo "check metadata of unknown rpm"
+$CURL $HOST/admin/v1/repos/$TESTREPO1/unknown.rpm/info -i -s | $CHECK_STATE "404 NOT FOUND"
+
 echo "check metadata of uploaded rpm"
 $CURL $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM/info -i -s | grep "Name.*: foo"
 
@@ -81,6 +87,9 @@ $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO2 -i -s | $CHECK_STATE "201 CREATED"
 echo "create empty repo3"
 $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3 -i -s | $CHECK_STATE "201 CREATED"
 
+echo "update testrepo metadata"
+$CURL $HOST/admin/v1/repos/$TESTREPO1/update-metadata -i -s | $CHECK_STATE "204 NO CONTENT"
+
 echo "update all metadata"
 $CURL $HOST/admin/v1/update -i -s | $CHECK_STATE "204 NO CONTENT"
 
@@ -92,6 +101,13 @@ if $TEST_YUM; then
     echo "rpm found in repo: " $($YUM info foo | grep "testrepo1")
 fi
 
+echo "stage non-existing rpm"
+$CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/not-there.rpm/stageto/testrepo2 -i -s | $CHECK_STATE "404 NOT FOUND"
+
+echo "stage testrpm to non-existing repo"
+$CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM/stageto/unknown-repo -i -s | $CHECK_STATE "404 NOT FOUND"
+
+echo "stage testrpm to testrepo2"
 $CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM/stageto/testrepo2
 
 if $TEST_YUM; then
@@ -110,6 +126,9 @@ echo "check for repo links"
 $CURL $HOST/admin/v1/repos/$TESTREPO1/is_link -i -s | grep "false"
 $CURL $HOST/admin/v1/repos/$TESTREPO3/is_link -i -s | grep "true"
 
+echo "try to link to missing repo"
+$CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3?link_to=unknown -i -s | $CHECK_STATE "404 NOT FOUND"
+
 echo "try to relink from repo3 to repo2"
 $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3?link_to=testrepo2 -i -s | $CHECK_STATE "201 CREATED"
 
@@ -121,7 +140,9 @@ if $TEST_YUM; then
     echo "rpm found in repo: " $($YUM info foo --showduplicates | grep "repo3")
 fi
 
-#HARDLINKS=$(stat -c %h target/repos/.metadata/$TESTRPM/$TESTRPM)
+echo "echo fetching all stat for rpm"
+$CURL $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM/stat | grep "st_blocks"
+
 HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM/stat/st_nlink)
 echo "number of hard links to test rpm: $HARDLINKS"
 grep -q 2 <<< $HARDLINKS
