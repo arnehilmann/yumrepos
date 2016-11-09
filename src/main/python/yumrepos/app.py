@@ -56,7 +56,8 @@ def add_admin_routes(app, backend):
 
     @admin.route('/repos/<path:reponame>/update-metadata', methods=['GET'])
     def update_metadata(reponame):
-        return backend.create_repo_metadata(reponame)
+        backend.create_repo_metadata(reponame)
+        return ('', 204)
 
     @admin.route('/repos/<path:reponame>', methods=['POST'])
     def upload_rpm(reponame):
