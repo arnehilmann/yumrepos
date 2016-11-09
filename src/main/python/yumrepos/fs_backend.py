@@ -270,7 +270,9 @@ class FsBackend(object):
     @lru_cache()
     def get_rpm_info(self, reponame, rpmname):
         filename = self._to_path(reponame, rpmname)
-        return subprocess.check_output(["rpm", "-qpi", filename])
+        if not os.path.exists(filename):
+            return ('', 404)
+        return (str(subprocess.check_output(["rpm", "-qpi", filename])), 200)
 
     def get_rpm_stat(self, reponame, rpmname, attr=None):
         filename = self._to_path(reponame, rpmname)

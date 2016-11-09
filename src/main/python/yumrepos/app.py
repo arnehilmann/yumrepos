@@ -56,8 +56,11 @@ def add_admin_routes(app, backend):
 
     @admin.route('/repos/<path:reponame>/update-metadata', methods=['GET'])
     def update_metadata(reponame):
-        backend.create_repo_metadata(reponame)
-        return ('', 204)
+        try:
+            backend.create_repo_metadata(reponame)
+            return ('', 204)
+        except:
+            return ('', 404)
 
     @admin.route('/repos/<path:reponame>', methods=['POST'])
     def upload_rpm(reponame):
@@ -80,10 +83,7 @@ def add_admin_routes(app, backend):
 
     @admin.route('/repos/<path:reponame>/<rpmname>/info', methods=['GET'])
     def get_rpm_info(reponame, rpmname):
-        try:
-            return (str(backend.get_rpm_info(reponame, rpmname)), 200)
-        except Exception:
-            return ('', 404)
+        return backend.get_rpm_info(reponame, rpmname)
 
     @admin.route('/repos/<path:reponame>/<rpmname>/stat', methods=['GET'])
     @admin.route('/repos/<path:reponame>/<rpmname>/stat/<attr>', methods=['GET'])
