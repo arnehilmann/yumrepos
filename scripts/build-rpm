@@ -19,15 +19,16 @@ build_on_centos6() {
         chown -R root.root . &&
         yum install -y python-setuptools rpm-build &&
         python setup.py bdist_rpm &&
-        cp dist/*.rpm /var/tmp/dist &&
-        chown -R $(stat -c %u:%g .) /var/tmp/dist"
+        mkdir -p /var/tmp/dist &&
+        cp dist/*.rpm /var/tmp/dist"
+    cp -r res src/unittest/resources/full-* src/unittest/resources/create-yum-conf $BUILD_DIR
     time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:6 bash -c "
         rpm -qilp dist/*-py26.noarch.rpm &&
         yum install -y epel-release &&
         yum install -y dist/*-py26.noarch.rpm &&
         (yumrepos &) &&
-        sleep 5 &&
-        curl -s -X POST http://0.0.0.0:8080/admin/shutdown"
+        sleep 2 &&
+        ./full-lifecycle-tests http://127.0.0.1:8080"
 }
 
 build_on_centos7() {
@@ -40,15 +41,16 @@ build_on_centos7() {
         chown -R root.root . &&
         yum install -y python-setuptools rpm-build &&
         python setup.py bdist_rpm &&
-        cp dist/*.rpm /var/tmp/dist &&
-        chown -R $(stat -c %u:%g .) /var/tmp/dist"
+        mkdir -p /var/tmp/dist &&
+        cp dist/*.rpm /var/tmp/dist"
+    cp -r res src/unittest/resources/full-* src/unittest/resources/create-yum-conf $BUILD_DIR
     time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR centos:7 bash -c "
         rpm -qilp dist/*-py27.noarch.rpm &&
         yum install -y epel-release &&
         yum install -y dist/*-py27.noarch.rpm &&
         (yumrepos &) &&
-        sleep 5 &&
-        curl -s -X POST http://0.0.0.0:8080/admin/shutdown"
+        sleep 2 &&
+        ./full-lifecycle-tests http://127.0.0.1:8080"
 }
 
 build_on_fedora23() {
@@ -61,14 +63,15 @@ build_on_fedora23() {
         chown -R root.root . &&
         dnf install -y rpm-build &&
         python3 setup.py bdist_rpm &&
-        cp dist/*.rpm /var/tmp/dist &&
-        chown -R $(stat -c %u:%g .) /var/tmp/dist"
+        mkdir -p /var/tmp/dist &&
+        cp dist/*.rpm /var/tmp/dist"
+    cp -r res src/unittest/resources/full-* src/unittest/resources/create-yum-conf $BUILD_DIR
     time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR fedora:23 bash -c "
         rpm -qilp dist/*-py34.noarch.rpm &&
         dnf install -y dist/*-py34.noarch.rpm &&
         (yumrepos &) &&
-        sleep 5 &&
-        curl -s -X POST http://0.0.0.0:8080/admin/shutdown"
+        sleep 2 &&
+        ./full-lifecycle-tests http://127.0.0.1:8080"
 }
 
 case $PY_VERSION in
@@ -80,8 +83,5 @@ case $PY_VERSION in
         exit 2
         ;;
 esac
-
-echo "dist dir after build, before chmod"
-ls -al $DIST_DIR
 
 echo "build took $SECONDS seconds"
