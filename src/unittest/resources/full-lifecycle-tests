@@ -37,8 +37,8 @@ $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO2 -s &> /dev/null || :
 $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO3 -s &> /dev/null || :
 
 
-echo "check if repos available"
-$CURL $REPOS
+# echo "check if repos available"
+# $CURL $REPOS
 
 # echo "check if yum-repo service is up"
 # echo $CURL $HOST/json
@@ -118,14 +118,15 @@ if $TEST_YUM; then
     echo "rpm found in repo: " $($YUM info foo --showduplicates | grep "repo3")
 fi
 
-HARDLINKS=$(stat -c %h target/repos/.metadata/$TESTRPM/$TESTRPM)
-echo "number of hard links to test rpm: " $HARDLINKS
+#HARDLINKS=$(stat -c %h target/repos/.metadata/$TESTRPM/$TESTRPM)
+HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM/stat/st_nlink)
+echo "number of hard links to test rpm: $HARDLINKS"
 grep -q 2 <<< $HARDLINKS
 
 echo "upload rpm to $TESTREPO1, again"
 $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
-HARDLINKS=$(stat -c %h target/repos/.metadata/$TESTRPM/$TESTRPM)
-echo "number of hard links to test rpm: " $HARDLINKS
+HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM/stat/st_nlink)
+echo "number of hard links to test rpm: $HARDLINKS"
 grep -q 3 <<< $HARDLINKS
 
 echo "tear down test repos"
