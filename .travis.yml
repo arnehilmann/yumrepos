@@ -8,15 +8,14 @@ python:
 services:
   - docker
 install:
-  - sudo apt-get install -y rpm yum
   - pip install coveralls
   - pip install pybuilder
   - pyb install_dependencies
 script:
   - pyb -X
   - cat target/reports/coverage
-after_success:
   - scripts/build-rpm
+after_success:
   - coveralls --verbose
 deploy:
   - provider: releases
