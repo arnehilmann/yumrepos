@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from distutils.spawn import find_executable
+import errno
 from fnmatch import fnmatch
 import glob
 import os
@@ -52,6 +53,16 @@ def unmark_as_obsolete(filename):
         pass
 
 
+def mkdir(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+
 def check_output_backported(*popenargs, **kwargs):
     r"""Run command with arguments and return its output as a byte string.
     Backported from Python 2.7 as it's implemented as pure python on stdlib.
@@ -98,11 +109,7 @@ class FsBackend(object):
                 break
 
         for dirname in (self.repos_folder, self.md_folder):
-            try:
-                os.mkdir(dirname)
-            except OSError as e:
-                if e.errno != 17:
-                    raise
+            mkdir(dirname)
 
         log.info("repo folder: %s" % self.repos_folder)
         log.info("md folder: %s" % self.md_folder)
@@ -110,14 +117,16 @@ class FsBackend(object):
         log.info("mergerepo binary: %s" % self.mergerepo_bin)
 
         empty_repo = os.path.join(self.md_folder, "__empty__")
-        try:
-            os.mkdir(empty_repo)
-        except OSError as e:
-            if e.errno != 17:
-                raise
-        subprocess.check_call([self.createrepo_bin, empty_repo])
+        self.create_repodata(empty_repo)
 
     # repo stuff
+
+    def create_repodata(self, repo_dir):
+        mkdir(repo_dir)
+        if not self.createrepo_bin:
+            touch(os.path.join(repo_dir, "repodata.faked"))
+            return
+        subprocess.check_call([self.createrepo_bin, repo_dir])
 
     def is_allowed_file(self, filename):
         return '.' in filename \
@@ -128,45 +137,35 @@ class FsBackend(object):
     def is_allowed_reponame(reponame):
         if reponame.startswith("repodata"):
             return False
-        if reponame.startswith("."):
-            return False
-        if reponame.endswith(".rpm"):
-            return False
         return re.match("^[-_a-zA-Z0-9]+$", reponame)
-        return True
 
     def create_rpm_metadata(self, filename):
         rpm_name = os.path.basename(filename)
-        repo_dir = os.path.dirname(filename)
         md_dir = os.path.join(self.md_folder, rpm_name)
-        log.debug("md dir: %s" % md_dir)
-        if not os.path.exists(md_dir):
-            os.mkdir(md_dir)
-            subprocess.check_call([
-                self.createrepo_bin,
-                "-n", rpm_name,
-                "-o", md_dir,
-                "--update",
-                repo_dir])
+        log.debug("create rpm metadata for %s: md dir %s" % (filename, md_dir))
+        mkdir(md_dir)
         linked_filename = os.path.join(md_dir, rpm_name)
         if os.path.exists(linked_filename):
             os.unlink(filename)
             os.link(linked_filename, filename)
         else:
             os.link(filename, linked_filename)
+        if not os.path.exists(os.path.join(md_dir, "repodata")):
+            self.create_repodata(md_dir)
 
     def create_repo_metadata(self, reponame):
         if not self.is_allowed_reponame(reponame):
             return
         repo_path = os.path.join(self.repos_folder, reponame)
         log.debug("creating metadata for %s" % repo_path)
+        mkdir(repo_path)
         if not self.mergerepo_bin:
             touch(os.path.join(repo_path, "repodata.faked"))
             return
+        for filename in os.listdir(repo_path):
+            if self.is_allowed_file(filename):
+                self.create_rpm_metadata(os.path.join(repo_path, filename))
         with open(os.devnull, "w") as fnull:
-            for filename in os.listdir(repo_path):
-                if self.is_allowed_file(filename):
-                    self.create_rpm_metadata(os.path.join(repo_path, filename))
             repos = [rpm_name
                      for rpm_name in os.listdir(repo_path)
                      if self.is_allowed_file(rpm_name)]
@@ -179,6 +178,8 @@ class FsBackend(object):
             subprocess.check_call(cmd, stdout=fnull, stderr=fnull)
 
     def create_repo(self, reponame):
+        if not self.is_allowed_reponame(reponame):
+            return ('', 403)
         try:
             log.debug("trying to create_repo %s" % self._to_path(reponame))
             os.mkdir(self._to_path(reponame))
@@ -270,6 +271,17 @@ class FsBackend(object):
     def get_rpm_info(self, reponame, rpmname):
         filename = self._to_path(reponame, rpmname)
         return subprocess.check_output(["rpm", "-qpi", filename])
+
+    def get_rpm_stat(self, reponame, rpmname, attr=None):
+        filename = self._to_path(reponame, rpmname)
+        stat = os.stat(filename)
+        if attr:
+            return getattr(stat, attr)
+        d = {}
+        for attr in dir(stat):
+            if attr.startswith("st_"):
+                d[attr] = getattr(stat, attr)
+        return d
 
     def list_repos(self):
         log.debug("listing %s" % self.repos_folder)

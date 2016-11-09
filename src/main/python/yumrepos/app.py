@@ -18,7 +18,7 @@ def add_repos_routes(app, backend):
             return (json.dumps(backend.list_rpms(path)), 200)
         return ('', 404)
 
-    app.register_blueprint(repos, url_prefix='/json')
+    app.register_blueprint(repos, url_prefix='/repos')
 
 
 def add_admin_routes(app, backend):
@@ -84,6 +84,14 @@ def add_admin_routes(app, backend):
         except Exception:
             return ('', 404)
 
+    @admin.route('/repos/<path:reponame>/<rpmname>/stat', methods=['GET'])
+    @admin.route('/repos/<path:reponame>/<rpmname>/stat/<attr>', methods=['GET'])
+    def get_rpm_stat(reponame, rpmname, attr=None):
+        try:
+            return (str(backend.get_rpm_stat(reponame, rpmname, attr)), 200)
+        except Exception:
+            return ('', 404)
+
     @admin.route('/repos/<path:reponame>/<rpmname>', methods=['DELETE'])
     def remove_rpm(reponame, rpmname):
         return backend.remove_rpm(reponame, rpmname)
@@ -108,7 +116,7 @@ def add_admin_routes(app, backend):
 def create_application(backend):
     app = Flask(__name__)
 
-    # add_repos_routes(app, backend)
+    add_repos_routes(app, backend)
     add_admin_routes(app, backend)
 
     return app
