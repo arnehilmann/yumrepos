@@ -25,7 +25,7 @@ description = """yumrepos
    - upload/stage/remove of rpms
 """
 
-default_task = ["clean", "analyze", "publish"]
+default_task = ["clean", "analyze", "package"]
 
 
 @task
