@@ -57,6 +57,9 @@ $CURL -X PUT $HOST/admin/v1/repos/repodata | $CHECK_STATE "403 FORBIDDEN"
 echo "create invalid repo"
 $CURL -X PUT $HOST/admin/v1/repos/foo.bar | $CHECK_STATE "403 FORBIDDEN"
 
+echo "create invalid deep repo structure"
+$CURL -X PUT $HOST/admin/v1/repos/a/b/c/d | $CHECK_STATE "403 FORBIDDEN"
+
 echo "create $TESTREPO1"
 $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "201 CREATED"
 
