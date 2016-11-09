@@ -51,8 +51,8 @@ $CURL $HOST/admin/v1/ready | $CHECK_STATE "204 NO CONTENT"
 echo "try to upload rpm to non-existant repo"
 $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "404 NOT FOUND"
 
-echo "try to upload non-existing rpm"
-$CURL -F rpm=@README.md $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "400 BAD REQUEST"
+echo "try to upload non-rpm"
+$CURL -F rpm=@setup.cfg $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "400 BAD REQUEST"
 
 echo "create invalid repo"
 $CURL -X PUT $HOST/admin/v1/repos/repodata | $CHECK_STATE "403 FORBIDDEN"
