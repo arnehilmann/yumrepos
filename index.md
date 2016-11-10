@@ -13,17 +13,26 @@ header-includes:
     <link rel="stylesheet" href="css/skeleton.css">
 
     <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <style>
+        .header{background-image:url("images/header3.jpeg");}
+        .header, .footer {background-size:cover; color:#ccc; }
+        .oncoloredbg, .oncoloredbg * {font-weight:400;text-shadow:0 0 2px black;}
+    </style>
 ---
-
-<div class="container">
-<div class="row">
-<div class="column" style="margin-top: 10%; margin-bottom: 20%;">
-
+<div class="section header">
+<div class="container oncoloredbg" style="padding-top: 15%; padding-bottom: 5%;">
 
 ## YumRepos Repo
 
-This is a yum repository for the yumrepos rpms and its centos7 configuration!
+This is the yum repository for the yumrepos rpms and its centos7 configuration!
 
+</div>
+</div>
+
+<div class="container">
+<div class="row">
+<div class="column" style="margin-top: 5%; margin-bottom: 20%;">
 
 #### Prerequisites
 
