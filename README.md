@@ -2,6 +2,7 @@
 
 [![Build Status](https://api.travis-ci.org/arnehilmann/yumrepos.svg?branch=master)](https://travis-ci.org/arnehilmann/yumrepos)
 [![Coverage Status](https://coveralls.io/repos/arnehilmann/yumrepos/badge.svg?branch=master&service=github)](https://coveralls.io/github/arnehilmann/yumrepos?branch=master)
+[![PyPI](https://img.shields.io/pypi/v/yumrepos.svg)](https://pypi.python.org/pypi/yumrepos)
 
 Minimal Yum Repo Server, with ReST API and Filesystem Backend
 
