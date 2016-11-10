@@ -20,7 +20,7 @@ header-includes:
         .header, .footer {background-size:cover; color:#ccc; }
         .oncoloredbg, .oncoloredbg * {font-weight:400;text-shadow:0 0 2px black;}
     </style>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="js/site.js"></script>
 ---
 <div class="section header">
