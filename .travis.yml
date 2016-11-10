@@ -15,8 +15,9 @@ install:
 script:
   - pyb -X
   - cat target/reports/coverage
-  - scripts/build-rpm
 after_success:
+  - scripts/build-rpm
+  - find target
   - coveralls --verbose
 deploy:
   - provider: releases
