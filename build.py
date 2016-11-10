@@ -13,7 +13,7 @@ use_plugin('filter_resources')
 name = "yumrepos"
 summary = "yumrepos: simple yum repositories with minimal rest api"
 url = "https://github.com/arnehilmann/yumrepos"
-version = "0.9.1"
+version = "0.9.2"
 
 authors = [Author('Arne Hilmann', 'arne.hilmann@gmail.com')]
 
