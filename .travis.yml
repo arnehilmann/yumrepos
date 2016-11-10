@@ -17,7 +17,8 @@ script:
   - cat target/reports/coverage
 after_success:
   - scripts/build-rpm
-  - find target
+  - find target/dist/
+  - ls -al target/dist/yumrepos-*/dist/
   - coveralls --verbose
 deploy:
   - provider: releases
