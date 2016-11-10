@@ -16,6 +16,7 @@ script:
   - pyb -X
   - cat target/reports/coverage
 after_success:
+  - find target/dist/
   - scripts/build-rpm
   - find target/dist/
   - ls -al target/dist/yumrepos-*/dist/

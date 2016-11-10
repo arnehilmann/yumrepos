@@ -30,6 +30,7 @@ build_on_centos6() {
         (yumrepos &) &&
         sleep 2 &&
         ./full-lifecycle-tests http://127.0.0.1:8080"
+    rm -fv $BUILD_DIR/full-* $BUILD_DIR/create-yum-conf
 }
 
 build_on_centos7() {
@@ -53,6 +54,7 @@ build_on_centos7() {
         (yumrepos &) &&
         sleep 2 &&
         ./full-lifecycle-tests http://127.0.0.1:8080"
+    rm -fv $BUILD_DIR/full-* $BUILD_DIR/create-yum-conf
 }
 
 build_on_fedora23() {
@@ -75,6 +77,7 @@ build_on_fedora23() {
         (yumrepos &) &&
         sleep 2 &&
         ./full-lifecycle-tests http://127.0.0.1:8080"
+    rm -fv $BUILD_DIR/full-* $BUILD_DIR/create-yum-conf
 }
 
 case $PY_VERSION in

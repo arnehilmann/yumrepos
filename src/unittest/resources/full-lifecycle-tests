@@ -185,9 +185,12 @@ $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3  -i -s | $CHECK_STATE "404 NOT F
 echo "calling update a last time, checking cleanup of metadata"
 $CURL $HOST/admin/v1/update -i -s | $CHECK_STATE "204 NO CONTENT"
 
-echo "trying to shutdown service, may fail when running as wsgi service"
+echo "trying to shutdown service (this may fail when running as wsgi service)"
 $CURL -X POST $HOST/admin/v1/shutdown
 
-echo
+echo "cleaning up"
+rm -rfv $OUT
+
 echo
 echo "SUCCESS"
+echo
