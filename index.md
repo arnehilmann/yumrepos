@@ -11,6 +11,7 @@ header-includes:
 
     <link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="css/custom.css">
 
     <link rel="icon" type="image/png" href="images/favicon.png">
 
@@ -19,6 +20,8 @@ header-includes:
         .header, .footer {background-size:cover; color:#ccc; }
         .oncoloredbg, .oncoloredbg * {font-weight:400;text-shadow:0 0 2px black;}
     </style>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="js/site.js"></script>
 ---
 <div class="section header">
 <div class="container oncoloredbg" style="padding-top: 15%; padding-bottom: 5%;">
@@ -29,6 +32,17 @@ This is the yum repository for the yumrepos rpms and its centos7 configuration!
 
 </div>
 </div>
+
+<div class="navbar-spacer"></div>
+<nav class="navbar">
+<div class="container">
+<ul class="navbar-list">
+<li class="navbar-item"><a class="navbar-link" href="#intro">Intro</a></li>
+<li class="navbar-item"><a class="navbar-link" href="#installation">Installation</a></li>
+<li class="navbar-item"><a class="navbar-link" href="#examples">On Github</a></li>
+</ul>
+</div>
+</nav>
 
 <div class="container">
 <div class="row">
