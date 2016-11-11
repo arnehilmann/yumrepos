@@ -11,6 +11,7 @@ header-includes:
 
     <link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="css/ribbons.css">
     <link rel="stylesheet" href="css/custom.css">
 
     <link rel="icon" type="image/png" href="images/favicon.png">
@@ -19,6 +20,7 @@ header-includes:
         .header{background-image:url("images/header3.jpeg");}
         .header, .footer {background-size:cover; color:#ccc; }
         .oncoloredbg, .oncoloredbg * {font-weight:400;text-shadow:0 0 2px black;}
+        h4{padding-top:4rem;}
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="js/site.js"></script>
@@ -26,34 +28,52 @@ header-includes:
 <div class="section header">
 <div class="container oncoloredbg" style="padding-top: 15%; padding-bottom: 5%;">
 
-## YumRepos Repo
 
-This is the yum repository for the yumrepos rpms and its centos7 configuration!
+## YumRepos
+
+Serve RPMs, locally, secure, fast, simple
 
 </div>
 </div>
+
+<div class="ribbon right grey"><a href="https://github.com/arnehilmann/yumrepos">Visit me on GitHub</a></div>
+
 
 <div class="navbar-spacer"></div>
+
 <nav class="navbar">
 <div class="container">
 <ul class="navbar-list">
-<li class="navbar-item"><a class="navbar-link" href="#intro">Intro</a></li>
+<li class="navbar-item"><a class="navbar-link" href="#features">Features</a></li>
 <li class="navbar-item"><a class="navbar-link" href="#installation">Installation</a></li>
-<li class="navbar-item"><a class="navbar-link" href="#examples">On Github</a></li>
+<li class="navbar-item"><a class="navbar-link" href="#further-questionscomments">On Github</a></li>
 </ul>
 </div>
 </nav>
 
 <div class="container">
 <div class="row">
-<div class="column" style="margin-top: 5%; margin-bottom: 20%;">
+<div class="column" style="margin-bottom: 30%;">
 
-#### Prerequisites
 
-* centos7 machine, including root access and internet access
+#### Features
+
+With YumRepos, you
+
+* can handle your repositories and RPMs via a simple and secure REST API,
+* have always up-to-date metadata,
+* might nest your repositories as deep as you need,
+* serve your repositories locally, as simple static content,
+* deduplicate your RPMs on upload,
+* need just 3 commands from "zero" to "working yum repository service".
+
+This place here also is the yum repository for the yumrepos rpms
+and its centos7 configuration!
 
 
 #### Installation
+
+* Prerequisites: centos7 machine, with root and internet access
 
 1. enable epel repos and yum utilities (as root user):<br/>
     ```sudo yum install epel-release yum-utils```
@@ -62,11 +82,8 @@ This is the yum repository for the yumrepos rpms and its centos7 configuration!
 3. install yumrepos configuration for centos7:<br/>
     ```sudo yum install yumrepos-behind-nginx-on-centos7```
 
-
-#### Next Steps
-
-Follow the instructions on your new shiny yumrepos server:<br/>
-```https://[YUMREPOS_SERVER]/```
+* Follow the instructions on your new shiny yumrepos server:<br/>
+    ```https://[YUMREPOS_SERVER]/```
 
 
 #### Further Questions/Comments?
