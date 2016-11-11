@@ -1,4 +1,5 @@
 ve
+ve-*
 target
 .coverage
 *.pyc
