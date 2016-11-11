@@ -18,9 +18,12 @@ header-includes:
 
     <style>
         .header{background-image:url("images/header3.jpeg");}
-        .header, .footer {background-size:cover; color:#ccc; }
+        .header, .footer {background-size:cover; color:#ccc;}
         .oncoloredbg, .oncoloredbg * {font-weight:400;text-shadow:0 0 2px black;}
         h4{padding-top:4rem;}
+        body{background-color:#f9f9f9;}
+        .sidenote{color:#555;font-style:italic;font-size:80%;display:inline-block;width:66%;margin-left:31%;text-align:right;}
+        li{padding-left:1rem;text-indent:-1rem;}
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="js/site.js"></script>
@@ -62,12 +65,22 @@ With YumRepos, you
 
 * can handle your repositories and RPMs via a simple and secure REST API,
 * have always up-to-date metadata,
-* might nest your repositories as deep as you need,
+  <span class="sidenote">no scheduler to wait(hope?) for: YumRepos has a synchronous, but
+  fast repository handling! The metadata of every RPM gets calculated on upload,
+  so updating a repository is just the merging of these pre-calculated metadata.</span>
 * serve your repositories locally, as simple static content,
+  <span class="sidenote">no complex logic between you and your rpms, just a simple web server</span>
 * deduplicate your RPMs on upload,
+  <span class="sidenote">you need an RPM in more than one repository? no problem, YumRepos uses HardLinks, so
+  no space gets wasted</span>
+* might nest your repositories as deep as you need,<br/>
+  <span class="sidenote">no need to define a maximum nesting depth upfront</span>
 * need just 3 commands from "zero" to "working yum repository service".
+  <span class="sidenote">okayokay, you need a CentOS7 machine to start with, afterwards you need at least one set
+  of credentials, and there are no repositories or RPMs at all... but: the service is up-n-running, and
+  using that service is just a http request away</span>
 
-This place here also is the yum repository for the yumrepos rpms
+This place here also hosts the yum repository for the yumrepos rpms
 and its centos7 configuration!
 
 
