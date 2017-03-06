@@ -89,6 +89,7 @@ if "check_output" not in dir(subprocess):
 
 
 class FsBackend(object):
+
     def __init__(self,
                  repos_folder,
                  createrepo_bins=['createrepo_c'],
@@ -133,11 +134,24 @@ class FsBackend(object):
             and filename.rsplit('.', 1)[1] in self.allowed_extensions \
             and not filename.startswith(".")
 
-    @staticmethod
-    def is_allowed_reponame(reponame):
-        if reponame.startswith("repodata"):
+    def is_allowed_reponame(self, reponame):
+        dirname = os.path.dirname(reponame)
+        if not os.path.isdir(os.path.join(self.repos_folder, dirname)):
             return False
-        return re.match("^[-_a-zA-Z0-9]+$", reponame)
+        basename = os.path.basename(reponame)
+        if basename.startswith("repodata"):
+            return False
+        if basename.endswith(".rpm"):
+            return False
+        if basename.startswith("."):
+            return False
+        if basename.startswith("/"):
+            return False
+        if ".." in basename:
+            return False
+        if "//" in basename:
+            return False
+        return re.match("^[-_a-zA-Z0-9/\.]+$", basename)
 
     def create_rpm_metadata(self, filename):
         rpm_name = os.path.basename(filename)
