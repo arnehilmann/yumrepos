@@ -20,6 +20,7 @@ for BIN in $(find $PWD/src/main/scripts -type f); do
     ln -sf $BIN $VENV/bin/
 done
 
+pip install six appdirs packaging
 pip install --upgrade setuptools
 
 pip install pybuilder
