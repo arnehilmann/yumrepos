@@ -169,13 +169,14 @@ class FsBackend(object):
 
     def create_repo_metadata(self, reponame):
         if not self.is_allowed_reponame(reponame):
-            return
+            return ('reponame %s now allowed' % reponame, 403)
         repo_path = os.path.join(self.repos_folder, reponame)
         log.debug("creating metadata for %s" % repo_path)
         mkdir(repo_path)
         if not self.mergerepo_bin:
             touch(os.path.join(repo_path, "repodata.faked"))
-            return
+            log.info("faking mergerepo %s" % reponame)
+            return ('', 204)
         for filename in os.listdir(repo_path):
             if self.is_allowed_file(filename):
                 self.create_rpm_metadata(os.path.join(repo_path, filename))
@@ -190,6 +191,7 @@ class FsBackend(object):
                    "--omit-baseurl"
                    ] + ["--repo=%s" % os.path.join(self.md_folder, rpm_name) for rpm_name in repos]
             subprocess.check_call(cmd, stdout=fnull, stderr=fnull)
+            return ('', 204)
 
     def create_repo(self, reponame):
         if not self.is_allowed_reponame(reponame):
