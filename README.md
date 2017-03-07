@@ -30,7 +30,7 @@ scripts/init-virtualenv
 . venv/bin/activate
 ```
 
-then see the [full lifecycle test](blob/master/src/unittest/resources/full-lifecycle-tests)
+then see the [full lifecycle test](src/unittest/resources/full-lifecycle-tests)
 
 
 ## rest API
