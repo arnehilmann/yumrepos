@@ -56,18 +56,16 @@ def add_admin_routes(app, backend):
 
     @admin.route('/repos/<path:reponame>', methods=['GET'])
     def get_repo(reponame):
-        args = request.args.lists()
-        if len(args) == 1:
-            first_arg = args[0][0]
-            if first_arg in ("update", "update-metadata"):
-                try:
-                    return backend.create_repo_metadata(reponame)
-                except Exception:
-                    return ('', 404)
-            if first_arg in ("is_link"):
-                if backend.is_link(reponame):
-                    return ('true', 200)
-                return ('false', 200)
+        args = request.args
+        if "update" in args or "update-metadata" in args:
+            try:
+                return backend.create_repo_metadata(reponame)
+            except Exception:
+                return ('', 404)
+        if "is_link" in args:
+            if backend.is_link(reponame):
+                return ('true', 200)
+            return ('false', 200)
         return ('', 403)
 
     @admin.route('/repos/<path:reponame>', methods=['POST'])
@@ -94,20 +92,15 @@ def add_admin_routes(app, backend):
     @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['GET'])
     def get_rpm_info(reponame, rpmname):
         rpmname = rpmname + ".rpm"
-        args = request.args.lists()
-        if len(args) == 1:
-            first_arg = args[0][0]
-            log.info("first arg: %s" % first_arg)
-            if first_arg in ("info"):
-                return backend.get_rpm_info(reponame, rpmname)
-            if first_arg in ("stat"):
-                attr = request.args.get("stat")
-                if len(attr) == 0:
-                    attr = None
-                try:
-                    return (str(backend.get_rpm_stat(reponame, rpmname, attr)), 200)
-                except Exception:
-                    return ('', 404)
+        args = request.args
+        if "info" in args:
+            return backend.get_rpm_info(reponame, rpmname)
+        if "stat" in args:
+            attr = args.get("stat", None)
+            try:
+                return (str(backend.get_rpm_stat(reponame, rpmname, attr)), 200)
+            except Exception:
+                return ('', 404)
         return ('', 403)
 
     @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['DELETE'])
