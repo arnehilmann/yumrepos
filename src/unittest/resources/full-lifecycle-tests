@@ -96,6 +96,8 @@ $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "201 CREATED"
 echo "update newly created repo"
 $CURL $HOST/admin/v1/repos/$TESTREPO1?update | $CHECK_STATE "204 NO CONTENT"
 $CURL $HOST/admin/v1/repos/$TESTREPO1?update-metadata | $CHECK_STATE "204 NO CONTENT"
+
+echo "play around with new repo"
 $CURL $HOST/admin/v1/repos/$TESTREPO1?foo | $CHECK_STATE "403 FORBIDDEN"
 $CURL $HOST/admin/v1/repos/$TESTREPO1?is_link | grep false
 
@@ -110,6 +112,8 @@ $CURL $HOST/admin/v1/repos/$TESTREPO1/unknown.rpm?info -i -s | $CHECK_STATE "404
 
 echo "check metadata of uploaded rpm"
 $CURL $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?info -i -s | grep "Name.*: foo"
+$CURL $HOST/admin/v1/rpms/$TESTRPM?info -i -s | grep "Name.*: foo"
+$CURL $HOST/admin/v1/rpms/$TESTRPM?stat -i -s | grep "st_blocks"
 
 echo "try to upload rpm to $TESTREPO1 again"
 $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $CHECK_STATE "409 CONFLICT"

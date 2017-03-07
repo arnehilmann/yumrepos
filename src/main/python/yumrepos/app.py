@@ -1,5 +1,6 @@
 from __future__ import print_function
 import json
+import os
 
 from flask import Flask, request, abort, Blueprint, send_file
 
@@ -115,6 +116,21 @@ def add_admin_routes(app, backend):
             func()
             return ('Shutdown NOW', 200)
         return ('Not in Standalone mode: Shutdown FORBIDDEN', 403)
+
+    @admin.route('/rpms/<rpmname>.rpm', methods=['GET'])
+    def get_direct_rpm(rpmname):
+        # TODO extract get_rpm_* functions, here and under get_rpm_info
+        rpmname = rpmname + ".rpm"
+        args = request.args
+        if "info" in args:
+            return backend.get_rpm_info(os.path.join(".metadata", rpmname), rpmname)
+        if "stat" in args:
+            attr = args.get("stat", None)
+            try:
+                return (str(backend.get_rpm_stat(".metadata", rpmname, attr)), 200)
+            except Exception:
+                return ('', 404)
+        return ('', 403)
 
     app.register_blueprint(admin, url_prefix='/admin/v1')
 
