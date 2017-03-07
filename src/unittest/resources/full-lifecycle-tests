@@ -38,14 +38,6 @@ $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO2 -s &> /dev/null || :
 $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO3 -s &> /dev/null || :
 
 
-# echo "check if repos available"
-# $CURL $REPOS
-
-# echo "check if yum-repo service is up"
-# echo $CURL $HOST/json
-# $CURL $HOST/json
-# $CURL $HOST/json | $CHECK_STATE "200 OK"
-
 echo "check if admin service is ready"
 $CURL $HOST/admin/v1/ready | $CHECK_STATE "204 NO CONTENT"
 
@@ -71,25 +63,32 @@ if $TEST_YUM; then
     $(dirname $0)/create-yum-conf $REPOS repos/a > $OUT/a.conf
     $(dirname $0)/create-yum-conf $REPOS repos/a/b > $OUT/ab.conf
     $(dirname $0)/create-yum-conf $REPOS repos/a/b/c > $OUT/abc.conf
-    $YUMMY $OUT/a.conf clean all
-    $YUMMY $OUT/ab.conf clean all
-    $YUMMY $OUT/abc.conf clean all
-fi
-$CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/a/b  -i -s | $CHECK_STATE "201 CREATED"
-$CURL -X PUT $HOST/admin/v1/repos/a/b/7 | $CHECK_STATE "201 CREATED"
-if $TEST_YUM; then
+
+    echo "uploading rpm to nested repo a/b"
+    $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/a/b  -i -s | $CHECK_STATE "201 CREATED"
+    $CURL -X PUT $HOST/admin/v1/repos/a/b/7 | $CHECK_STATE "201 CREATED"
+
     $CURL $HOST/admin/v1/repos/a?update-metadata | $CHECK_STATE "204 NO CONTENT"
+    $YUMMY $OUT/a.conf clean all
     $YUMMY $OUT/a.conf list foo 2>&1 | grep "No matching"
+    $YUMMY $OUT/ab.conf clean all
+    $YUMMY $OUT/ab.conf list foo 2>&1 | grep "No matching"
+    $YUMMY $OUT/abc.conf clean all
+    $YUMMY $OUT/abc.conf list foo 2>&1 | grep "No matching"
+
+    echo "updating metadata of repo a/b"
     $CURL $HOST/admin/v1/repos/a/b?update-metadata | $CHECK_STATE "204 NO CONTENT"
+    $YUMMY $OUT/a.conf clean all
+    $YUMMY $OUT/a.conf list foo 2>&1 | grep "No matching"
+    $YUMMY $OUT/ab.conf clean all
     $YUMMY $OUT/ab.conf list foo 2> /dev/null | grep "foo.x86"
+    $YUMMY $OUT/abc.conf clean all
+    $YUMMY $OUT/abc.conf list foo 2>&1 | grep "No matching"
+
+    echo "cleaning up nested repos"
+    $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/a -s | $CHECK_STATE "204 NO CONTENT"
 fi
-#sleep 4
-#echo $YUMMY
-#echo $OUT
-#echo $CURL
-#echo $HOST
-#exit 111
-$CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/a -s | $CHECK_STATE "204 NO CONTENT"
+
 
 echo "create $TESTREPO1"
 $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "201 CREATED"
@@ -158,6 +157,7 @@ $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3?link_to=testrepo2 -i -s | $CHECK_ST
 
 echo "check for repo links"
 $CURL $HOST/admin/v1/repos/$TESTREPO1?is_link -i -s | grep "false"
+$CURL $HOST/admin/v1/repos/$TESTREPO2?is_link -i -s | grep "false"
 $CURL $HOST/admin/v1/repos/$TESTREPO3?is_link -i -s | grep "true"
 
 echo "try to link to missing repo"
