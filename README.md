@@ -6,6 +6,16 @@
 
 Minimal Yum Repo Server, with ReST API and deduplicating Filesystem Backend
 
+
+## features
+
+* fast read access: uses nginx as frontend
+* simple ReST API: create/remove repos, upload/move/remove rpms
+* dedicated update command: you decide when to recalculate repo metadata
+* fast metadata calculation: uses C implementation, merges pre-calculated metadata
+* deduplicated RPMs: hardlinked copies only
+
+
 ## tl;dr for centos7 end users
 
 follow instructions in the [centos7-specific repository](https://arnehilmann.github.io/yumrepos/index.html)
@@ -19,6 +29,9 @@ cd yumrepos
 scripts/init-virtualenv
 . venv/bin/activate
 ```
+
+then see the [full lifecycle test](blob/master/src/unittest/resources/full-lifecycle-tests)
+
 
 ## rest API
 
