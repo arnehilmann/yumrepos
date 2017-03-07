@@ -1,8 +1,11 @@
 #!/bin/bash
 set -u -e -E
 
+SORT=gsort
+HEAD=ghead
+
 mkdir -p target
-git tag  | sort -V | head -n -5 > target/to_be_deleted
+git tag  | $SORT -V | $HEAD -n -5 > target/to_be_deleted
 cat target/to_be_deleted
 
 echo "These tags will be deleted! If you are unsure, hit Ctrl-C NOW!"
