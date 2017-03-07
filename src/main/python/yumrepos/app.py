@@ -54,54 +54,66 @@ def add_admin_routes(app, backend):
         recursivly = request.method == 'DELETERECURSIVLY'
         return backend.remove_repo(reponame, recursivly)
 
-    @admin.route('/repos/<path:reponame>/update-metadata', methods=['GET'])
-    def update_metadata(reponame):
-        try:
-            backend.create_repo_metadata(reponame)
-            return ('', 204)
-        except:
-            return ('', 404)
+    @admin.route('/repos/<path:reponame>', methods=['GET'])
+    def get_repo(reponame):
+        args = request.args.lists()
+        if len(args) == 1:
+            first_arg = args[0][0]
+            if first_arg in ("update", "update-metadata"):
+                try:
+                    return backend.create_repo_metadata(reponame)
+                except Exception:
+                    return ('', 404)
+            if first_arg in ("is_link"):
+                if backend.is_link(reponame):
+                    return ('true', 200)
+                return ('false', 200)
+        return ('', 403)
 
     @admin.route('/repos/<path:reponame>', methods=['POST'])
     def upload_rpm(reponame):
         rpm_file = request.files['rpm']
-        # import pdb; pdb.set_trace()
         if rpm_file and backend.is_allowed_file(rpm_file.filename):
             return backend.upload_rpm(reponame, rpm_file)
 
         return "%s not a valid rpm" % rpm_file.filename, 400
 
-    @admin.route('/repos/<reponame>/<rpmname>/stageto/<targetreponame>', methods=['PUT', 'STAGE'])
-    def stage_rpm(reponame, rpmname, targetreponame):
+    @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['STAGE'])
+    def stage_rpm(reponame, rpmname):
+        rpmname = rpmname + ".rpm"
         if not backend.exists(reponame, rpmname):
             return "rpm '%s/%s' does not exist" % (reponame, rpmname), 404
+        targetreponame = request.args.get("stageto")
+        log.info("target repo name: %s" % targetreponame)
         if not backend.exists(targetreponame):
             return "target repo '%s' does not exist" % targetreponame, 404
         if backend.exists(targetreponame, rpmname):
             abort(409)
         return backend.stage(reponame, rpmname, targetreponame)
 
-    @admin.route('/repos/<path:reponame>/<rpmname>/info', methods=['GET'])
+    @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['GET'])
     def get_rpm_info(reponame, rpmname):
-        return backend.get_rpm_info(reponame, rpmname)
+        rpmname = rpmname + ".rpm"
+        args = request.args.lists()
+        if len(args) == 1:
+            first_arg = args[0][0]
+            log.info("first arg: %s" % first_arg)
+            if first_arg in ("info"):
+                return backend.get_rpm_info(reponame, rpmname)
+            if first_arg in ("stat"):
+                attr = request.args.get("stat")
+                if len(attr) == 0:
+                    attr = None
+                try:
+                    return (str(backend.get_rpm_stat(reponame, rpmname, attr)), 200)
+                except Exception:
+                    return ('', 404)
+        return ('', 403)
 
-    @admin.route('/repos/<path:reponame>/<rpmname>/stat', methods=['GET'])
-    @admin.route('/repos/<path:reponame>/<rpmname>/stat/<attr>', methods=['GET'])
-    def get_rpm_stat(reponame, rpmname, attr=None):
-        try:
-            return (str(backend.get_rpm_stat(reponame, rpmname, attr)), 200)
-        except Exception:
-            return ('', 404)
-
-    @admin.route('/repos/<path:reponame>/<rpmname>', methods=['DELETE'])
+    @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['DELETE'])
     def remove_rpm(reponame, rpmname):
+        rpmname = rpmname + ".rpm"
         return backend.remove_rpm(reponame, rpmname)
-
-    @admin.route('/repos/<path:reponame>/is_link', methods=['GET'])
-    def is_repo_a_link(reponame):
-        if backend.is_link(reponame):
-            return ('true', 200)
-        return ('false', 200)
 
     @admin.route('/shutdown', methods=['POST'])
     def shutdown():

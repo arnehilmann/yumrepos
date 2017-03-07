@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e -E -u -o pipefail -C
+set -e -E -u -C
 
 #set -x
 HOST=${1:?no HOST given?!}
@@ -24,6 +24,7 @@ if yum --version &> /dev/null; then
     TEST_YUM=true
     YUM_CONF=$OUT/yum.conf
     YUM="yum -c $YUM_CONF --disablerepo=* --enablerepo=testrepo*"
+    YUMMY="yum --disablerepo=* --enablerepo=a,b,c -c"
     echo "'yum' command found"
 
     $(dirname $0)/create-yum-conf $REPOS repos/$TESTREPO1 repos/$TESTREPO2 repos/$TESTREPO3 > $YUM_CONF
@@ -54,23 +55,50 @@ $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "404 N
 echo "try to upload non-rpm"
 $CURL -F rpm=@setup.cfg $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "400 BAD REQUEST"
 
-echo "create invalid repo"
+echo "try to create invalid repos"
 $CURL -X PUT $HOST/admin/v1/repos/repodata | $CHECK_STATE "403 FORBIDDEN"
-
-echo "create invalid repo"
 $CURL -X PUT $HOST/admin/v1/repos/.foo | $CHECK_STATE "403 FORBIDDEN"
-
-echo "create invalid deep repo structure"
+$CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/a -s &> /dev/null
 $CURL -X PUT $HOST/admin/v1/repos/a/b/c | $CHECK_STATE "403 FORBIDDEN"
 
 echo "create nested repo structure"
 $CURL -X PUT $HOST/admin/v1/repos/a | $CHECK_STATE "201 CREATED"
 $CURL -X PUT $HOST/admin/v1/repos/a/b | $CHECK_STATE "201 CREATED"
 $CURL -X PUT $HOST/admin/v1/repos/a/b/c | $CHECK_STATE "201 CREATED"
+
+if $TEST_YUM; then
+    echo "checking nested repos via yum"
+    $(dirname $0)/create-yum-conf $REPOS repos/a > $OUT/a.conf
+    $(dirname $0)/create-yum-conf $REPOS repos/a/b > $OUT/ab.conf
+    $(dirname $0)/create-yum-conf $REPOS repos/a/b/c > $OUT/abc.conf
+    $YUMMY $OUT/a.conf clean all
+    $YUMMY $OUT/ab.conf clean all
+    $YUMMY $OUT/abc.conf clean all
+fi
+$CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/a/b  -i -s | $CHECK_STATE "201 CREATED"
+$CURL -X PUT $HOST/admin/v1/repos/a/b/7 | $CHECK_STATE "201 CREATED"
+if $TEST_YUM; then
+    $CURL $HOST/admin/v1/repos/a?update-metadata | $CHECK_STATE "204 NO CONTENT"
+    $YUMMY $OUT/a.conf list foo 2>&1 | grep "No matching"
+    $CURL $HOST/admin/v1/repos/a/b?update-metadata | $CHECK_STATE "204 NO CONTENT"
+    $YUMMY $OUT/ab.conf list foo 2> /dev/null | grep "foo.x86"
+fi
+#sleep 4
+#echo $YUMMY
+#echo $OUT
+#echo $CURL
+#echo $HOST
+#exit 111
 $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/a -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "create $TESTREPO1"
 $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO1 | $CHECK_STATE "201 CREATED"
+
+echo "update newly created repo"
+$CURL $HOST/admin/v1/repos/$TESTREPO1?update | $CHECK_STATE "204 NO CONTENT"
+$CURL $HOST/admin/v1/repos/$TESTREPO1?update-metadata | $CHECK_STATE "204 NO CONTENT"
+$CURL $HOST/admin/v1/repos/$TESTREPO1?foo | $CHECK_STATE "403 FORBIDDEN"
+$CURL $HOST/admin/v1/repos/$TESTREPO1?is_link | grep false
 
 echo "try to create $TESTREPO1 again"
 $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
@@ -79,10 +107,10 @@ echo "upload rpm to $TESTREPO1"
 $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
 
 echo "check metadata of unknown rpm"
-$CURL $HOST/admin/v1/repos/$TESTREPO1/unknown.rpm/info -i -s | $CHECK_STATE "404 NOT FOUND"
+$CURL $HOST/admin/v1/repos/$TESTREPO1/unknown.rpm?info -i -s | $CHECK_STATE "404 NOT FOUND"
 
 echo "check metadata of uploaded rpm"
-$CURL $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM/info -i -s | grep "Name.*: foo"
+$CURL $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?info -i -s | grep "Name.*: foo"
 
 echo "try to upload rpm to $TESTREPO1 again"
 $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $CHECK_STATE "409 CONFLICT"
@@ -94,7 +122,7 @@ echo "create empty repo3"
 $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3 -i -s | $CHECK_STATE "201 CREATED"
 
 echo "update testrepo metadata"
-$CURL $HOST/admin/v1/repos/$TESTREPO1/update-metadata -i -s | $CHECK_STATE "204 NO CONTENT"
+$CURL $HOST/admin/v1/repos/$TESTREPO1?update-metadata -i -s | $CHECK_STATE "204 NO CONTENT"
 
 echo "update all metadata"
 $CURL $HOST/admin/v1/update -i -s | $CHECK_STATE "204 NO CONTENT"
@@ -108,13 +136,13 @@ if $TEST_YUM; then
 fi
 
 echo "stage non-existing rpm"
-$CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/not-there.rpm/stageto/testrepo2 -i -s | $CHECK_STATE "404 NOT FOUND"
+$CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/not-there.rpm?stageto=testrepo2 -i -s | $CHECK_STATE "404 NOT FOUND"
 
 echo "stage testrpm to non-existing repo"
-$CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM/stageto/unknown-repo -i -s | $CHECK_STATE "404 NOT FOUND"
+$CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=unknown-repo -i -s | $CHECK_STATE "404 NOT FOUND"
 
 echo "stage testrpm to testrepo2"
-$CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM/stageto/testrepo2
+$CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=testrepo2
 
 if $TEST_YUM; then
     echo "search for rpm via yum"
@@ -129,8 +157,8 @@ $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3 -i -s | $CHECK_STATE "204 NO CON
 $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3?link_to=testrepo2 -i -s | $CHECK_STATE "201 CREATED"
 
 echo "check for repo links"
-$CURL $HOST/admin/v1/repos/$TESTREPO1/is_link -i -s | grep "false"
-$CURL $HOST/admin/v1/repos/$TESTREPO3/is_link -i -s | grep "true"
+$CURL $HOST/admin/v1/repos/$TESTREPO1?is_link -i -s | grep "false"
+$CURL $HOST/admin/v1/repos/$TESTREPO3?is_link -i -s | grep "true"
 
 echo "try to link to missing repo"
 $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3?link_to=unknown -i -s | $CHECK_STATE "404 NOT FOUND"
@@ -143,19 +171,20 @@ if $TEST_YUM; then
     $YUM clean all
     $YUM repolist
     $YUM search foo | grep "foo.x86_64"
+    $YUM info foo --showduplicates
     echo "rpm found in repo: " $($YUM info foo --showduplicates | grep "repo3")
 fi
 
 echo "echo fetching all stat for rpm"
-$CURL $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM/stat | grep "st_blocks"
+$CURL $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stat | grep "st_blocks"
 
-HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM/stat/st_nlink)
+HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stat=st_nlink)
 echo "number of hard links to test rpm: $HARDLINKS"
 grep -q 2 <<< $HARDLINKS
 
 echo "upload rpm to $TESTREPO1, again"
 $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
-HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM/stat/st_nlink)
+HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stat=st_nlink)
 echo "number of hard links to test rpm: $HARDLINKS"
 grep -q 3 <<< $HARDLINKS
 
