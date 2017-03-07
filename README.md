@@ -14,6 +14,7 @@ Minimal Yum Repo Server, with ReST API and deduplicating Filesystem Backend
 * dedicated update command: you decide when to recalculate repo metadata
 * fast metadata calculation: uses C implementation, merges pre-calculated metadata
 * deduplicated RPMs: hardlinked copies only
+* there is a [dedicated HiRes Promo Website](https://arnehilmann.github.io/yumrepos/index.html)
 
 
 ## tl;dr for centos7 end users
