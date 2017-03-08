@@ -45,14 +45,14 @@
 
 
 <h4 id="features">Features</h4>
-<p>With YumRepos, you</p>
+<p>With YumRepos, you …</p>
 <ul>
 <li>can handle your repositories and RPMs via a simple and secure REST API,</li>
 <li>have always up-to-date metadata, <span class="sidenote">no scheduler to wait(hope?) for: YumRepos has a synchronous, but fast repository handling! The metadata of every RPM gets calculated on upload, so updating a repository is just the merging of these pre-calculated metadata.</span></li>
 <li>serve your repositories locally, as simple static content, <span class="sidenote">no complex logic between you and your rpms, just a simple web server</span></li>
 <li>deduplicate your RPMs on upload, <span class="sidenote">you need an RPM in more than one repository? no problem, YumRepos uses HardLinks, so no space gets wasted</span></li>
 <li>might nest your repositories as deep as you need,<br/> <span class="sidenote">no need to define a maximum nesting depth upfront</span></li>
-<li>need just 3 commands from “zero” to “working yum repository service”. <span class="sidenote">okayokay, you need a CentOS7 machine to start with, afterwards you need at least one set of credentials, and there are no repositories or RPMs at all… but: the service is up-n-running, and using that service is just a http request away</span></li>
+<li>need just 3 commands from “zero” to “working yum repository service”. <span class="sidenote">okay, you need a CentOS7 machine to start with, afterwards you need at least one set of credentials, and there are no repositories or RPMs at all… but: the service is up-n-running, and using that service is just a http request away</span></li>
 </ul>
 <p>This place here also hosts the yum repository for the yumrepos rpms and its centos7 configuration!</p>
 <h4 id="installation">Installation</h4>
@@ -60,12 +60,12 @@
 <li>Prerequisites: centos7 machine, with root and internet access</li>
 </ul>
 <ol style="list-style-type: decimal">
-<li>enable epel repos and yum utilities (as root user):<br/> <code>sudo yum install epel-release yum-utils</code></li>
+<li>enable epel repos and yum utilities:<br/> <code>sudo yum install epel-release yum-utils</code></li>
 <li>enable this repo:<br/> <code>sudo yum-config-manager --add-repo https://arnehilmann.github.io/yumrepos/yumrepos.repo</code></li>
 <li>install yumrepos configuration for centos7:<br/> <code>sudo yum install yumrepos-behind-nginx-on-centos7</code></li>
 </ol>
 <ul>
-<li>Follow the instructions on your new shiny yumrepos server:<br/> <code>https://[YUMREPOS_SERVER]/</code></li>
+<li>Follow the instructions on your new shiny yumrepos server:<br/> <code>https://localhost/</code></li>
 </ul>
 <h4 id="further-questionscomments">Further Questions/Comments?</h4>
 <p>Have a look at the <a href="https://github.com/arnehilmann/yumrepos#rest-api">API</a>.<br/> And see the <a href="https://github.com/arnehilmann/yumrepos">admin part</a> or the <a href="https://github.com/arnehilmann/yumrepos-behind-nginx-on-centos7">centos7-specific configuration</a> of this installation.</p>

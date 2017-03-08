@@ -61,7 +61,7 @@ Serve RPMs, locally, secure, fast, simple
 
 #### Features
 
-With YumRepos, you
+With YumRepos, you &hellip;
 
 * can handle your repositories and RPMs via a simple and secure REST API,
 * have always up-to-date metadata,
@@ -76,7 +76,7 @@ With YumRepos, you
 * might nest your repositories as deep as you need,<br/>
   <span class="sidenote">no need to define a maximum nesting depth upfront</span>
 * need just 3 commands from "zero" to "working yum repository service".
-  <span class="sidenote">okayokay, you need a CentOS7 machine to start with, afterwards you need at least one set
+  <span class="sidenote">okay, you need a CentOS7 machine to start with, afterwards you need at least one set
   of credentials, and there are no repositories or RPMs at all... but: the service is up-n-running, and
   using that service is just a http request away</span>
 
@@ -88,7 +88,7 @@ and its centos7 configuration!
 
 * Prerequisites: centos7 machine, with root and internet access
 
-1. enable epel repos and yum utilities (as root user):<br/>
+1. enable epel repos and yum utilities:<br/>
     ```sudo yum install epel-release yum-utils```
 2. enable this repo:<br/>
     ```sudo yum-config-manager --add-repo https://arnehilmann.github.io/yumrepos/yumrepos.repo```
@@ -96,7 +96,7 @@ and its centos7 configuration!
     ```sudo yum install yumrepos-behind-nginx-on-centos7```
 
 * Follow the instructions on your new shiny yumrepos server:<br/>
-    ```https://[YUMREPOS_SERVER]/```
+    ```https://localhost/```
 
 
 #### Further Questions/Comments?
