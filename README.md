@@ -9,11 +9,12 @@ Minimal Yum Repo Server, with ReST API and deduplicating Filesystem Backend
 
 ## features
 
-* fast read access: uses nginx as frontend
 * simple ReST API: create/remove repos, upload/move/remove rpms
+* fast read access: uses nginx as frontend
 * dedicated update command: you decide when to recalculate repo metadata
 * fast metadata calculation: uses C implementation, merges pre-calculated metadata
 * deduplicated RPMs: hardlinked copies only
+* supports symbolic repo links
 * there is a [dedicated HiRes Promo Website](https://arnehilmann.github.io/yumrepos/index.html)
 
 
