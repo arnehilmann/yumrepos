@@ -2,6 +2,7 @@ from __future__ import print_function
 import json
 import os
 
+from braceexpand import braceexpand
 from flask import Flask, request, abort, Blueprint, send_file
 
 from yumrepos import log
@@ -47,6 +48,23 @@ def add_admin_routes(app, backend):
                 return ('%s not a repo' % link_to, 404)
             return backend.create_repo_link(reponame, link_to)
         return backend.create_repo(reponame)
+
+    @admin.route('/repos', methods=['POST'])
+    def create_bulk_repos():
+        spec = request.form.get('pathspec')
+        if not spec:
+            return ('no pathspec parameter given?!', 400)
+        log.info("pathspec: %s" % spec)
+        reponames = list(braceexpand(spec))
+        log.info("expanded pathes: %s" % ", ".join(reponames))
+        for reponame in reponames:
+            if not backend.is_allowed_reponame(reponame):
+                return ('%s not an allowed reponame' % reponame, 403)
+        for reponame in reponames:
+            text, status = backend.create_repo(reponame)
+            if status != 201:
+                return (text, status)
+        return ('', 201)
 
     @admin.route('/repos/<path:reponame>', methods=['DELETE', 'DELETERECURSIVLY'])
     def remove_repo(reponame):

@@ -135,9 +135,6 @@ class FsBackend(object):
             and not filename.startswith(".")
 
     def is_allowed_reponame(self, reponame):
-        dirname = os.path.dirname(reponame)
-        if not os.path.isdir(os.path.join(self.repos_folder, dirname)):
-            return False
         basename = os.path.basename(reponame)
         if basename.startswith("repodata"):
             return False
@@ -198,15 +195,18 @@ class FsBackend(object):
             return ('', 403)
         try:
             log.debug("trying to create_repo %s" % self._to_path(reponame))
-            os.mkdir(self._to_path(reponame))
+            mkdir(self._to_path(reponame))
         except OSError as e:
             if e.errno != 17:
                 log.error(e)
                 if e.errno == 2:
                     return ('', 404)
                 raise
+        path = reponame
+        while path:
+            self.create_repo_metadata(path)
+            path, tail = os.path.split(path)
         log.info("repo %s created!" % reponame)
-        self.create_repo_metadata(reponame)
         return ('', 201)
 
     def remove_repo(self, reponame, recursivly=False):
