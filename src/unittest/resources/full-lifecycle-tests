@@ -147,6 +147,12 @@ $CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=unknown-repo -i 
 echo "stage testrpm to testrepo2"
 $CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=testrepo2
 
+echo "copy testrpm to testrepo2"
+$CURL -X COPY $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=testrepo3
+
+echo "delete up testrpm from testrepo3"
+$CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3/$TESTRPM -i -s | $CHECK_STATE "204 NO CONTENT"
+
 if $TEST_YUM; then
     echo "search for rpm via yum"
     $YUM clean all
