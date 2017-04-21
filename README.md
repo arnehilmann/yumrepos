@@ -78,6 +78,13 @@ response: 201 CREATED, 404 NOT FOUND (source rpm not found), 409 CONFLICT (rpm a
 
 
 
+### copy rpm to another repo
+```curl -X COPY $HOST/admin/v1/repos/SOURCE_REPO/RPM?stageto=TARGET_REPO```
+
+response: 201 CREATED, 404 NOT FOUND (source rpm not found), 409 CONFLICT (rpm already present in target repo)
+
+
+
 ### delete empty repo
 ```curl -X DELETE $HOST/admin/v1/repos/OBSOLETE_REPO```
 

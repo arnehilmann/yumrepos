@@ -267,9 +267,12 @@ class FsBackend(object):
         filename = self._to_path(path)
         return os.path.isfile(filename) and os.path.exists(filename)
 
-    def stage(self, source, rpm, target):
-        shutil.move(self._to_path(source, rpm), self._to_path(target, rpm))
-        self.create_repo_metadata(source)
+    def stage(self, source, rpm, target, copy=False):
+        if copy:
+            shutil.copy(self._to_path(source, rpm), self._to_path(target, rpm))
+        else:
+            shutil.move(self._to_path(source, rpm), self._to_path(target, rpm))
+            self.create_repo_metadata(source)
         self.create_repo_metadata(target)
         return '', 201
 
