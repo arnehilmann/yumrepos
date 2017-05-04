@@ -30,6 +30,9 @@ git clone https://github.com/arnehilmann/yumrepos.git
 cd yumrepos
 scripts/init-virtualenv
 . venv/bin/activate
+# start a basic development server
+./src/main/scripts/yumrepos
+# now use the API with $HOST=http://127.0.0.1:8080/
 ```
 
 then see the [full lifecycle test](src/unittest/resources/full-lifecycle-tests)
