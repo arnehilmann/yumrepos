@@ -54,6 +54,30 @@ response: 201 CREATED, 403 FORBIDDEN (wrong reponame, non-existing path)
 
 
 
+### create multiple repos
+```curl -F pathspec="PATHSPEC" $HOST/admin/v1/repos```
+
+PATHSPEC: define pathes via
+[brace expansion](https://www.gnu.org/software/bash/manual/html_node/Brace-Expansion.html)
+
+pathspec example:
+```curl -F pathspec="base/{6,7}/{x86_64,noarch}" $HOST/admin/v1/repos```
+results in the following repo hierarchy:
+```
+base/
++-- 6/
+|   +-- x86_64/
+|   +-- noarch/
+|
++-- 7/
+    +-- x86_64/
+    +-- noarch/
+```
+
+response: 201 CREATED, 403 FORBIDDEN (wrong reponame, non-existing path), 400 BAD REQUEST (missing/malformed pathspec)
+
+
+
 ### check repo
 ```curl $HOST/$TESTREPO1/```
 
