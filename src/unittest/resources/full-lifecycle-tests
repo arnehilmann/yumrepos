@@ -20,12 +20,13 @@ rm -rf $OUT/*
 mkdir -p $OUT
 
 TEST_YUM=false
-if yum --version &> /dev/null; then
-    TEST_YUM=true
+yum --version &> /dev/null && createrepo_c --help &> /dev/null && TEST_YUM=true
+
+if $TEST_YUM; then
     YUM_CONF=$OUT/yum.conf
     YUM="yum -c $YUM_CONF --disablerepo=* --enablerepo=testrepo*"
     YUMMY="yum --disablerepo=* --enablerepo=a,b,c -c"
-    echo "'yum' command found"
+    echo "'yum' and 'createrepo_c' commands found, testing repos via yum cli"
 
     $(dirname $0)/create-yum-conf $REPOS repos/$TESTREPO1 repos/$TESTREPO2 repos/$TESTREPO3 > $YUM_CONF
 fi
