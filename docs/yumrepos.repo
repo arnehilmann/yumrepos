@@ -1,0 +1,9 @@
+[main]
+plugins=1
+
+[yumrepos]
+name=the home of the yum repos
+baseurl=https://arnehilmann.github.io/yumrepos/
+gpgcheck=0
+sslverify=1
+enabled=1
