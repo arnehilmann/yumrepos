@@ -95,7 +95,7 @@ def add_admin_routes(app, backend):
 
         return "%s not a valid rpm" % rpm_file.filename, 400
 
-    @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['STAGE'])
+    @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['STAGE', 'COPY'])
     def stage_rpm(reponame, rpmname):
         rpmname = rpmname + ".rpm"
         if not backend.exists(reponame, rpmname):
@@ -106,7 +106,7 @@ def add_admin_routes(app, backend):
             return "target repo '%s' does not exist" % targetreponame, 404
         if backend.exists(targetreponame, rpmname):
             abort(409)
-        return backend.stage(reponame, rpmname, targetreponame)
+        return backend.stage(reponame, rpmname, targetreponame, copy=request.method == 'COPY')
 
     @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['GET'])
     def get_rpm_info(reponame, rpmname):
