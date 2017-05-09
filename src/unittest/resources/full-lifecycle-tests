@@ -154,7 +154,7 @@ echo "stage testrpm to testrepo2"
 $CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=testrepo2
 
 echo "copy rpm from testrepo2 to testrepo3"
-$CURL -X COPY $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stageto=testrepo3
+$CURL -X COPY $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?copyto=testrepo3
 
 echo "delete rpm from testrepo3"
 $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3/$TESTRPM -i -s | $CHECK_STATE "204 NO CONTENT"
