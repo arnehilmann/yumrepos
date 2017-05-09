@@ -3,7 +3,7 @@ import json
 import os
 
 from braceexpand import braceexpand
-from flask import Flask, request, abort, Blueprint, send_file
+from flask import Flask, request, Blueprint, send_file  # , abort
 
 from yumrepos import log
 
@@ -95,18 +95,31 @@ def add_admin_routes(app, backend):
 
         return "%s not a valid rpm" % rpm_file.filename, 400
 
-    @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['STAGE', 'COPY'])
-    def stage_rpm(reponame, rpmname):
-        rpmname = rpmname + ".rpm"
+    def _precheck_stage_or_copy(reponame, rpmname, targetreponame):
+        if not targetreponame:
+            return ("no stageto or copyto parameter given?!", 400)
         if not backend.exists(reponame, rpmname):
-            return "rpm '%s/%s' does not exist" % (reponame, rpmname), 404
-        targetreponame = request.args.get("stageto")
+            return ("rpm '%s/%s' does not exist" % (reponame, rpmname), 404)
         log.info("target repo name: %s" % targetreponame)
         if not backend.exists(targetreponame):
-            return "target repo '%s' does not exist" % targetreponame, 404
+            return ("target repo '%s' does not exist" % targetreponame, 404)
         if backend.exists(targetreponame, rpmname):
-            abort(409)
-        return backend.stage(reponame, rpmname, targetreponame, copy=request.method == 'COPY')
+            return ("", 409)
+        return None  # no problems found
+
+    @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['STAGE'])
+    def stage_rpm(reponame, rpmname):
+        rpmname = rpmname + ".rpm"
+        targetreponame = request.args.get("stageto")
+        problem = _precheck_stage_or_copy(reponame, rpmname, targetreponame)
+        return problem if problem else backend.stage(reponame, rpmname, targetreponame)
+
+    @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['COPY'])
+    def copy_rpm(reponame, rpmname):
+        rpmname = rpmname + ".rpm"
+        targetreponame = request.args.get("copyto")
+        problem = _precheck_stage_or_copy(reponame, rpmname, targetreponame)
+        return problem if problem else backend.copy(reponame, rpmname, targetreponame)
 
     @admin.route('/repos/<path:reponame>/<rpmname>.rpm', methods=['GET'])
     def get_rpm_info(reponame, rpmname):
