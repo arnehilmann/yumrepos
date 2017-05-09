@@ -153,10 +153,10 @@ $CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=unknown-repo -i 
 echo "stage testrpm to testrepo2"
 $CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=testrepo2
 
-echo "copy testrpm to testrepo2"
-$CURL -X COPY $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=testrepo3
+echo "copy rpm from testrepo2 to testrepo3"
+$CURL -X COPY $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stageto=testrepo3
 
-echo "delete up testrpm from testrepo3"
+echo "delete rpm from testrepo3"
 $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3/$TESTRPM -i -s | $CHECK_STATE "204 NO CONTENT"
 
 if $TEST_YUM; then
@@ -168,7 +168,7 @@ if $TEST_YUM; then
 fi
 
 echo "replace repo3 with a link to repo2"
-$CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3 -i -s | $CHECK_STATE "204 NO CONTENT"
+$CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO3 -i -s | $CHECK_STATE "204 NO CONTENT"
 $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3?link_to=testrepo2 -i -s | $CHECK_STATE "201 CREATED"
 
 echo "check for repo links"
