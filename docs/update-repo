@@ -10,10 +10,21 @@ cp ../../yumrepos-behind-nginx-on-centos7/tmp/*.rpm .
 
 LATEST_YUMREPOS_RELEASE=$(curl -Is https://github.com/arnehilmann/yumrepos/releases/latest | $SED -n '/Location:/{s/.*: //;p}')
 echo "latest yumrepos release: $LATEST_YUMREPOS_RELEASE"
-DOWNLOAD_URL=$(echo $LATEST_YUMREPOS_RELEASE | $SED -n 's_v\([0-9\.]*\).*$_v\1/yumrepos-\1-py27.noarch.rpm_;s_/tag/_/download/_;p')
-echo "download url: $DOWNLOAD_URL"
 
-curl -OLs "$DOWNLOAD_URL"
+for VARIANT in py26 py27 py34 py35; do
+    DOWNLOAD_URL=$(echo $LATEST_YUMREPOS_RELEASE | $SED -n 's_v\([0-9\.]*\).*$_v\1/yumrepos-\1-'$VARIANT'.noarch.rpm_;s_/tag/_/download/_;p')
+    echo "download url: $DOWNLOAD_URL"
+
+    curl -OLs "$DOWNLOAD_URL"
+done
+
+for RPM in *.rpm; do
+    SIZE_K=$(du -k $RPM | cut -f1)
+    if [[ $SIZE_K -lt 10 ]]; then
+        echo "$RPM too small: just $SIZE_K kB! removing it..."
+        rm -fv $RPM
+    fi
+done
 
 echo "cleaning repodata"
 rm -rf repodata/*
