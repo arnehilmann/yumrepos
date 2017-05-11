@@ -80,8 +80,31 @@ build_on_fedora23() {
     rm -fv $BUILD_DIR/full-* $BUILD_DIR/create-yum-conf
 }
 
+build_on_fedora24() {
+    echo "building rpm on fedora24"
+    time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR fedora:24 bash -c "
+        mkdir /tmp/build &&
+        cp -R * /tmp/build &&
+        cd /tmp/build &&
+        cp setup.fedora24.cfg setup.cfg &&
+        chown -R root.root . &&
+        dnf install -y rpm-build &&
+        python3 setup.py bdist_rpm &&
+        mkdir -p /var/tmp/dist &&
+        cp dist/*.rpm /var/tmp/dist &&
+        chown -R $(stat -c %u:%g .) /var/tmp/dist"
+    cp -r res src/unittest/resources/full-* src/unittest/resources/create-yum-conf $BUILD_DIR
+    time docker run -v $BUILD_DIR:$WORK_DIR -w $WORK_DIR fedora:24 bash -c "
+        rpm -qilp dist/*-py35.noarch.rpm &&
+        dnf install -y dist/*-py35.noarch.rpm &&
+        (yumrepos &) &&
+        sleep 2 &&
+        ./full-lifecycle-tests http://127.0.0.1:8080"
+    rm -fv $BUILD_DIR/full-* $BUILD_DIR/create-yum-conf
+}
+
 case $PY_VERSION in
-    35) build_on_fedora23;;
+    35) build_on_fedora24;;
     34) build_on_fedora23;;
     27) build_on_centos7;;
     26) build_on_centos6;;
