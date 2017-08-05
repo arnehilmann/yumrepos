@@ -184,6 +184,7 @@ class FsBackend(object):
             while len(repos) < 2:
                 repos.append("__empty__")
             cmd = [self.mergerepo_bin,
+                   "--all",
                    "-o", repo_path,
                    "--omit-baseurl"
                    ] + ["--repo=%s" % os.path.join(self.md_folder, rpm_name) for rpm_name in repos]

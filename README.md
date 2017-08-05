@@ -152,3 +152,26 @@ response: 204 NO CONTENT, 404 NOT FOUND
 ```curl -X POST $HOST/admin/v1/shutdown```
 
 response: 200 OK, 403 FORBIDDEN (when not in standalone mode)
+
+
+
+## development cheat sheet
+
+### build in docker container
+
+```
+docker ...
+yum install createrepo_c
+scripts/init-virtualenv
+. ve/bin/activate
+
+# do stuff
+pyb
+```
+
+### create dummy rpm
+
+```
+docker run -it -v $PWD:/local -w /local alanfranz/fwd-centos-7 bash
+fpm -s empty -t rpm -n foo -v 1.42
+```
