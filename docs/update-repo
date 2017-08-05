@@ -32,7 +32,7 @@ git checkout -- repodata/ || :
 git rm -f repodata/* || :
 
 echo "generating repodata"
-docker run -v $PWD:/repo local/centos7-with-createrepo
+docker run -v $PWD:/repo local/centos7-with-createrepo createrepo_c /repo
 
 git add *.rpm repodata/*
 git status
