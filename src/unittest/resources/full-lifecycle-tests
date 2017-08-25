@@ -12,6 +12,7 @@ TESTREPO1=testrepo1
 TESTREPO2=testrepo2
 TESTREPO3=testrepo3
 TESTRPM=foo-1.0-1.x86_64.rpm
+ANOTHER_TESTRPM=foo-1.42-1.x86_64.rpm
 CURL="curl -kLis"
 CHECK_STATE="grep -i"
 OUT=target/full-lifecycle-tests
@@ -191,7 +192,7 @@ if $TEST_YUM; then
     echo "rpm found in repo: " $($YUM info foo --showduplicates | grep "repo3")
 fi
 
-echo "echo fetching all stat for rpm"
+echo "fetching all stat for rpm"
 $CURL $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stat | grep "st_blocks"
 
 HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stat=st_nlink)
@@ -203,6 +204,18 @@ $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $CHECK_STATE
 HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stat=st_nlink)
 echo "number of hard links to test rpm: $HARDLINKS"
 grep -q 3 <<< $HARDLINKS
+
+echo "uploading newer rpm"
+$CURL -F rpm=@res/$ANOTHER_TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $CHECK_STATE "201 CREATED"
+$CURL $HOST/admin/v1/repos/$TESTREPO1?update-metadata -i -s | $CHECK_STATE "204 NO CONTENT"
+if $TEST_YUM; then
+    echo "search for rpm via yum"
+    $YUM clean all
+    $YUM repolist
+    $YUM search foo | grep "foo.x86_64"
+    $YUM info foo --showduplicates
+    echo "new foo rpm found: " $($YUM info foo --showduplicates | grep "1.42")
+fi
 
 echo "tear down test repos"
 
