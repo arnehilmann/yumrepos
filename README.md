@@ -160,8 +160,8 @@ response: 200 OK, 403 FORBIDDEN (when not in standalone mode)
 ### build in docker container
 
 ```
-docker ...
-yum install createrepo_c
+docker run -it -v $PWD:/local -w /local centos:7 bash
+yum install -y createrepo_c
 scripts/init-virtualenv
 . ve/bin/activate
 
