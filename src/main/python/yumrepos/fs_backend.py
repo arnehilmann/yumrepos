@@ -177,7 +177,7 @@ class FsBackend(object):
         for filename in os.listdir(repo_path):
             if self.is_allowed_file(filename):
                 self.create_rpm_metadata(os.path.join(repo_path, filename))
-        with open(os.devnull, "w") as fnull:
+        with open(os.devnull, "w") as fnull:  # TODO allow logging here
             repos = [rpm_name
                      for rpm_name in os.listdir(repo_path)
                      if self.is_allowed_file(rpm_name)]
