@@ -63,30 +63,31 @@ Serve RPMs, locally, secure, fast, simple
 
 With YumRepos, you &hellip;
 
-* can handle your repositories and RPMs via a simple and secure REST API,
+* have a simple [ReST API](https://github.com/arnehilmann/yumrepos#rest-api),
+  to handle your repositories and RPMs,
 * have always up-to-date metadata,
-  <span class="sidenote">no scheduler to wait(hope?) for: YumRepos has a synchronous, but
-  fast repository handling! The metadata of every RPM gets calculated on upload,
-  so updating a repository is just the merging of these pre-calculated metadata.</span>
-* serve your repositories locally, as simple static content,
-  <span class="sidenote">no complex logic between you and your rpms, just a simple web server</span>
+  <span class="sidenote">no scheduler to wait/hope for: YumRepos has a synchronous and
+  blazingly fast metadata handling!</span>
+* serve your repositories as simple static content,
+  <span class="sidenote">no complex logic between you and your rpms, just a web server</span>
 * deduplicate your RPMs on upload,
-  <span class="sidenote">you need an RPM in more than one repository? no problem, YumRepos uses HardLinks, so
+  <span class="sidenote">YumRepos uses hardlinks for all 'copies' of the same RPM, so
   no space gets wasted</span>
 * might nest your repositories as deep as you need,<br/>
   <span class="sidenote">no need to define a maximum nesting depth upfront</span>
-* need just 3 commands from "zero" to "working yum repository service".
+* need just [3 commands](#installation) from "zero" to "working yum repository service".
   <span class="sidenote">okay, you need a CentOS7 machine to start with, afterwards you need at least one set
   of credentials, and there are no repositories or RPMs at all... but: the service is up-n-running, and
   using that service is just a http request away</span>
 
-This place here also hosts the yum repository for the yumrepos rpms
+[This place here](https://github.com/arnehilmann/yumrepos/tree/master/docs)
+also hosts the yum repository for the yumrepos rpms
 and its centos7 configuration!
 
 
 #### Installation
 
-* Prerequisites: centos7 machine, with root and internet access
+_Prerequisites: centos7 machine, with root and internet access_
 
 1. enable epel repos and yum utilities:<br/>
     ```sudo yum install epel-release yum-utils```
@@ -95,8 +96,8 @@ and its centos7 configuration!
 3. install yumrepos configuration for centos7:<br/>
     ```sudo yum install yumrepos-behind-nginx-on-centos7```
 
-* Follow the instructions on your new shiny yumrepos server:<br/>
-    ```https://localhost/```
+Now just follow the instructions on your new shiny yumrepos server:<br/>
+    visit ```https://localhost/```
 
 
 #### Further Questions/Comments?
