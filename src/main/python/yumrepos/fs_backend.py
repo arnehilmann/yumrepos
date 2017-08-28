@@ -18,41 +18,6 @@ from werkzeug import secure_filename
 from yumrepos import log
 
 
-NEW = "new"
-OBSOLETE = "obsolete"
-
-
-def touch(fname, times=None):
-    with open(fname, 'a'):
-        os.utime(fname, times)
-
-
-def remove(fname):
-    if os.path.exists(fname):
-        os.remove(fname)
-
-
-def mark_as_new(filename):
-    unmark_as_obsolete(filename)
-    touch(filename + "." + NEW)
-
-
-def unmark_as_new(filename):
-    remove(filename + "." + NEW)
-
-
-def mark_as_obsolete(filename):
-    unmark_as_new(filename)
-    touch(filename + "." + OBSOLETE)
-
-
-def unmark_as_obsolete(filename):
-    try:
-        remove(filename + "." + OBSOLETE)
-    except OSError:
-        pass
-
-
 def mkdir(path):
     try:
         os.makedirs(path)
@@ -124,9 +89,6 @@ class FsBackend(object):
 
     def create_repodata(self, repo_dir):
         mkdir(repo_dir)
-        if not self.createrepo_bin:
-            touch(os.path.join(repo_dir, "repodata.faked"))
-            return
         subprocess.check_call([self.createrepo_bin, repo_dir])
 
     def is_allowed_file(self, filename):
@@ -170,10 +132,6 @@ class FsBackend(object):
         repo_path = os.path.join(self.repos_folder, reponame)
         log.debug("creating metadata for %s" % repo_path)
         mkdir(repo_path)
-        if not self.mergerepo_bin:
-            touch(os.path.join(repo_path, "repodata.faked"))
-            log.info("faking mergerepo %s" % reponame)
-            return ('', 204)
         for filename in os.listdir(repo_path):
             if self.is_allowed_file(filename):
                 self.create_rpm_metadata(os.path.join(repo_path, filename))
@@ -247,9 +205,9 @@ class FsBackend(object):
         if os.path.exists(complete_filename):
             return "%s already exists" % filename, 409
         try:
-            mark_as_new(complete_filename)
             file.save(complete_filename)
             self.create_rpm_metadata(complete_filename)
+            self.create_repo_metadata(reponame)
             return ('', 201)
         except IOError as e:
             if e.errno == 2:
@@ -283,7 +241,8 @@ class FsBackend(object):
         filename = self._to_path(reponame, rpmname)
         if not os.path.exists(filename):
             return ('', 404)
-        mark_as_obsolete(filename)
+        os.unlink(filename)
+        self.create_repo_metadata(reponame)
         return ('', 204)
 
     def is_link(self, reponame):
@@ -325,7 +284,6 @@ class FsBackend(object):
             yield dirpath.replace(self.repos_folder, '')[1:]
 
     def update_all_metadata(self):
-        self.commit_actions()
         for reponame in self.walk_repos():
             self.create_repo_metadata(reponame)
         for rpmname in os.listdir(self.md_folder):
@@ -335,22 +293,3 @@ class FsBackend(object):
             if nr_links <= 1:
                 log.info("rpm %s not referenced, removing its metadata" % rpmname)
                 shutil.rmtree(os.path.join(self.md_folder, rpmname))
-
-    def commit_actions(self):
-        for dirpath, dirnames, filenames in os.walk(self.repos_folder):
-            dirnames[:] = [d for d in dirnames if self.is_allowed_reponame(d)]
-            for filename in filenames:
-                filename, action = self.split_action(filename)
-                if not action:
-                    continue
-                full_path = os.path.join(dirpath, filename)
-                if action == OBSOLETE:
-                    os.unlink(full_path)
-                    unmark_as_obsolete(full_path)
-                if action == NEW:
-                    unmark_as_new(full_path)
-
-    def split_action(self, full_filename):
-        if full_filename.endswith(NEW) or full_filename.endswith(OBSOLETE):
-            return full_filename.rsplit(".", 1)
-        return (full_filename, None)
