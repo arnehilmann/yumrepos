@@ -19,8 +19,8 @@ header-includes:
     <style>
         .header{background-image:url("images/header3.jpeg");}
         .header, .footer {background-size:cover; color:#ccc;}
-        .oncoloredbg, .oncoloredbg * {font-weight:400;text-shadow:0 0 2px black;}
-        h4{padding-top:4rem;}
+        .oncoloredbg, .oncoloredbg * {font-weight:300;text-shadow:0 0 2px black;}
+        h4{padding-top:2rem;}
         body{background-color:#f9f9f9;}
         .sidenote{color:#555;font-style:italic;font-size:80%;display:inline-block;width:66%;margin-left:31%;text-align:right;}
         li{padding-left:1rem;text-indent:-1rem;}
@@ -29,7 +29,7 @@ header-includes:
     <script src="js/site.js"></script>
 ---
 <div class="section header">
-<div class="container oncoloredbg" style="padding-top: 15%; padding-bottom: 5%;">
+<div class="container oncoloredbg" style="padding-top: 8%; padding-bottom: 3%;">
 
 
 ## YumRepos
