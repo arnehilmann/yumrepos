@@ -1,0 +1,47 @@
+#!/bin/bash
+set -e -E -u -C
+
+function setup {
+    # TESTREPO1=testrepo1
+    # TESTREPO2=testrepo2
+    # TESTREPO3=testrepo3
+    # TESTRPM=foo-1.0-1.x86_64.rpm
+
+    CURL="curl -kLis"
+    ASSERT_IN="grep -i -B 100"
+    OUT=target/$(basename $0)
+
+    function call {
+        echo
+        echo "######## calling '$*'"
+        $*
+    }
+
+    function die {
+        echo $*
+        exit 2
+    }
+
+    trap "echo; echo; echo AN ERROR OCCURED; echo; exit 1" ERR
+
+    rm -rf $OUT/* && mkdir -pv $OUT
+
+    yum --version &> /dev/null || die "'yum' needed"
+    createrepo_c --help &> /dev/null || die "'createrepo_c' needed"
+
+    YUM_CONF=$OUT/yum.conf
+    YUM="yum -c $YUM_CONF --disablerepo=* --enablerepo=testrepo*"
+    YUMMY="yum --disablerepo=* --enablerepo=a,b,c -c"
+}
+
+function teardown {
+    echo "trying to shutdown service (this may fail when running as wsgi service)"
+    call $CURL -X POST $HOST/admin/v1/shutdown
+
+    echo "cleaning up"
+    rm -rfv $OUT
+
+    echo
+    echo "SUCCESS"
+    echo
+}

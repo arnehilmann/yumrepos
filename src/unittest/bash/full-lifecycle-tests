@@ -1,0 +1,178 @@
+#!/bin/bash
+set -e -E -u -C
+
+HOST=${1:?no HOST given?!}
+REPOS=${2:?no REPOS given?!}
+
+. $(dirname $0)/common
+
+setup
+
+TESTREPO1=testrepo1
+TESTREPO2=testrepo2
+TESTREPO3=testrepo3
+TESTRPM=foo-1.0-1.x86_64.rpm
+ANOTHER_TESTRPM=foo-1.42-1.x86_64.rpm
+
+$(dirname $0)/create-yum-conf $REPOS repos/$TESTREPO1 repos/$TESTREPO2 repos/$TESTREPO3 > $YUM_CONF
+
+echo "preparing test repos"
+$CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO1 -s &> /dev/null || :
+$CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO2 -s &> /dev/null || :
+$CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO3 -s &> /dev/null || :
+
+echo "check if admin service is ready"
+call $CURL $HOST/admin/v1/ready | $ASSERT_IN "204 NO CONTENT"
+
+echo "try to upload rpm to non-existant repo"
+call $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1 | $ASSERT_IN "404 NOT FOUND"
+
+echo "try to upload non-rpm"
+call $CURL -F rpm=@setup.cfg $HOST/admin/v1/repos/$TESTREPO1 | $ASSERT_IN "400 BAD REQUEST"
+
+echo "try to create invalid repos"
+call $CURL -X PUT $HOST/admin/v1/repos/repodata | $ASSERT_IN "403 FORBIDDEN"
+call $CURL -X PUT $HOST/admin/v1/repos/.foo | $ASSERT_IN "403 FORBIDDEN"
+
+echo "create $TESTREPO1"
+call $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO1 | $ASSERT_IN "201 CREATED"
+
+echo "update newly created repo"
+call $CURL $HOST/admin/v1/repos/$TESTREPO1?update | $ASSERT_IN "204 NO CONTENT"
+call $CURL $HOST/admin/v1/repos/$TESTREPO1?update-metadata | $ASSERT_IN "204 NO CONTENT"
+
+echo "play around with new repo"
+call $CURL $HOST/admin/v1/repos/$TESTREPO1?foo | $ASSERT_IN "403 FORBIDDEN"
+call $CURL $HOST/admin/v1/repos/$TESTREPO1?is_link | grep false
+
+echo "try to create $TESTREPO1 again"
+call $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO1  -i -s | $ASSERT_IN "201 CREATED"
+
+echo "upload rpm to $TESTREPO1"
+call $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $ASSERT_IN "201 CREATED"
+
+echo "check metadata of unknown rpm"
+call $CURL $HOST/admin/v1/repos/$TESTREPO1/unknown.rpm?info -i -s | $ASSERT_IN "404 NOT FOUND"
+
+echo "check metadata of uploaded rpm"
+call $CURL $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?info -i -s | grep "Name.*: foo"
+call $CURL $HOST/admin/v1/rpms/$TESTRPM?info -i -s | grep "Name.*: foo"
+call $CURL $HOST/admin/v1/rpms/$TESTRPM?stat -i -s | grep "st_blocks"
+
+echo "try to upload rpm to $TESTREPO1 again"
+call $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $ASSERT_IN "409 CONFLICT"
+
+echo "create $TESTREPO2"
+call $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO2 -i -s | $ASSERT_IN "201 CREATED"
+
+echo "create empty repo3"
+call $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3 -i -s | $ASSERT_IN "201 CREATED"
+
+echo "update testrepo metadata"
+call $CURL $HOST/admin/v1/repos/$TESTREPO1?update-metadata -i -s | $ASSERT_IN "204 NO CONTENT"
+
+echo "update all metadata"
+call $CURL $HOST/admin/v1/update -i -s | $ASSERT_IN "204 NO CONTENT"
+
+echo "search for rpm via yum"
+$YUM clean all
+$YUM repolist
+$YUM search foo 2> /dev/null | grep "foo.x86_64"
+echo "rpm found in repo: " $($YUM info foo | grep "testrepo1")
+
+echo "stage non-existing rpm"
+call $CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/not-there.rpm?stageto=testrepo2 -i -s | $ASSERT_IN "404 NOT FOUND"
+
+echo "stage testrpm to non-existing repo"
+call $CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=unknown-repo -i -s | $ASSERT_IN "404 NOT FOUND"
+
+echo "stage testrpm to testrepo2"
+call $CURL -X STAGE $HOST/admin/v1/repos/$TESTREPO1/$TESTRPM?stageto=testrepo2
+
+echo "copy rpm from testrepo2 to testrepo3"
+call $CURL -X COPY $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?copyto=testrepo3
+
+echo "delete rpm from testrepo3"
+call $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3/$TESTRPM -i -s | $ASSERT_IN "204 NO CONTENT"
+
+echo "search for rpm via yum"
+$YUM clean all
+$YUM repolist
+$YUM search foo 2> /dev/null | grep "foo.x86_64"
+echo "rpm found in repo: " $($YUM info foo | grep "testrepo2")
+
+echo "replace repo3 with a link to repo2"
+call $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO3 -i -s | $ASSERT_IN "204 NO CONTENT"
+call $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3?link_to=testrepo2 -i -s | $ASSERT_IN "201 CREATED"
+
+echo "check for repo links"
+call $CURL $HOST/admin/v1/repos/$TESTREPO1?is_link -i -s | grep "false"
+call $CURL $HOST/admin/v1/repos/$TESTREPO2?is_link -i -s | grep "false"
+call $CURL $HOST/admin/v1/repos/$TESTREPO3?is_link -i -s | grep "true"
+
+echo "try to link to missing repo"
+call $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3?link_to=unknown -i -s | $ASSERT_IN "404 NOT FOUND"
+
+echo "try to relink from repo3 to repo2"
+call $CURL -X PUT $HOST/admin/v1/repos/$TESTREPO3?link_to=testrepo2 -i -s | $ASSERT_IN "201 CREATED"
+
+echo "search for rpm via yum"
+$YUM clean all
+$YUM repolist
+$YUM search foo | grep "foo.x86_64"
+$YUM info foo --showduplicates
+echo "rpm found in repo: " $($YUM info foo --showduplicates | grep "repo3")
+
+echo "fetching all stat for rpm"
+call $CURL $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stat | grep "st_blocks"
+
+HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stat=st_nlink)
+echo "number of hard links to test rpm: $HARDLINKS"
+grep -q 2 <<< $HARDLINKS
+
+echo "upload rpm to $TESTREPO1, again"
+call $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $ASSERT_IN "201 CREATED"
+HARDLINKS=$(curl -s $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM?stat=st_nlink)
+echo "number of hard links to test rpm: $HARDLINKS"
+grep -q 3 <<< $HARDLINKS
+
+echo "uploading newer rpm"
+call $CURL -F rpm=@res/$ANOTHER_TESTRPM $HOST/admin/v1/repos/$TESTREPO1  -i -s | $ASSERT_IN "201 CREATED"
+call $CURL $HOST/admin/v1/repos/$TESTREPO1?update-metadata -i -s | $ASSERT_IN "204 NO CONTENT"
+echo "search for rpm via yum"
+$YUM clean all
+$YUM repolist
+$YUM search foo | grep "foo.x86_64"
+$YUM info foo --showduplicates
+echo "new foo rpm found: " $($YUM info foo --showduplicates | grep "1.42")
+
+echo "tear down test repos"
+
+echo "try to remove non-empty $TESTREPO2"
+call $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO2  -i -s | $ASSERT_IN "409 CONFLICT"
+
+echo "remove rpm"
+call $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM -i -s | $ASSERT_IN "204 NO CONTENT"
+
+echo "update repo, commit all outstanding actions"
+call $CURL $HOST/admin/v1/update -i -s | $ASSERT_IN "204 NO CONTENT"
+
+echo "try to remove rpm that was removed already"
+call $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO2/$TESTRPM  -i -s | $ASSERT_IN "404 NOT FOUND"
+
+echo "remove repo $TESTREPO1 recursivly"
+call $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/$TESTREPO1  -i -s | $ASSERT_IN "204 NO CONTENT"
+
+echo "remove empty repo $TESTREPO2"
+call $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO2  -i -s | $ASSERT_IN "204 NO CONTENT"
+
+echo "remove repo link $TESTREPO3"
+call $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3  -i -s | $ASSERT_IN "204 NO CONTENT"
+
+echo "try to remove repo link $TESTREPO3 that was removed already"
+call $CURL -X DELETE $HOST/admin/v1/repos/$TESTREPO3  -i -s | $ASSERT_IN "404 NOT FOUND"
+
+echo "calling update a last time, checking cleanup of metadata"
+call $CURL $HOST/admin/v1/update -i -s | $ASSERT_IN "204 NO CONTENT"
+
+teardown

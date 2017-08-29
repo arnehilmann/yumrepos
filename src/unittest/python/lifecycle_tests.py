@@ -4,6 +4,7 @@ from __future__ import print_function
 import os
 import logging
 import select
+import shutil
 import subprocess
 import sys
 import threading
@@ -42,14 +43,23 @@ def call(popenargs, logger, stdout_log_level=logging.INFO, stderr_log_level=logg
 
 
 class Test(unittest.TestCase):
-    PORT = 28080
-    HOST = "http://localhost:%i" % PORT
-    REPO_DIR = os.path.join(os.getcwd(), "target")
 
-    def test(self):
+    def test_full_lifecycle(self):
+        self._run_test("../bash/full-lifecycle-tests")
+
+    def test_nested_repos(self):
+        self._run_test("../bash/nested-repos-tests")
+
+    def test_bulk_repos(self):
+        self._run_test("../bash/bulk-repos-tests")
+
+    def _run_test(self, script, port=28080):
+        host = "http://localhost:%i" % port
+        repo_dir = os.path.join(os.getcwd(), "target", "integrationtests-%i" % port)
+
         def testrunner():
-            application = create_application(FsBackend(os.path.join(Test.REPO_DIR, "repos")))
-            application.run("0.0.0.0", self.PORT)
+            application = create_application(FsBackend(os.path.join(repo_dir, "repos")))
+            application.run("0.0.0.0", port)
 
         t = threading.Thread(target=testrunner)
         t.setDaemon(True)
@@ -58,16 +68,17 @@ class Test(unittest.TestCase):
         time.sleep(1)
 
         logger = logging.getLogger("testclient")
-        result = call(" ".join([os.path.join(os.path.dirname(__file__),
-                                "../resources/full-lifecycle-tests"),
-                                self.HOST,
-                                "file://%s" % Test.REPO_DIR]),
+        result = call(" ".join([os.path.join(os.path.dirname(__file__), script),
+                                host,
+                                "file://%s" % repo_dir]),
                       logger,
                       shell=True)
 
-        t.join(4)
+        t.join(2)
         print("server still alive? %s" % t.is_alive())
         self.assertEqual(result, 0)
+
+        shutil.rmtree(repo_dir)
 
 
 if __name__ == "__main__":

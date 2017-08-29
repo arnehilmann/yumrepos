@@ -1,0 +1,36 @@
+#!/bin/bash
+set -e -E -u -C
+
+HOST=${1:?no HOST given?!}
+REPOS=${2:?no REPOS given?!}
+
+. $(dirname $0)/common
+
+setup
+
+TESTRPM=foo-1.0-1.x86_64.rpm
+
+echo "create nested repo structure"
+call $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/a -s &> /dev/null || :
+call $CURL -X PUT $HOST/admin/v1/repos/a/b/c | $ASSERT_IN "201 CREATED"
+
+echo "uploading rpm to nested repo a/b"
+call $CURL -F rpm=@res/$TESTRPM $HOST/admin/v1/repos/a/b  -i -s | $ASSERT_IN "201 CREATED"
+
+echo "checking nested repos via yum"
+$(dirname $0)/create-yum-conf $REPOS repos/a > $OUT/a.conf
+$(dirname $0)/create-yum-conf $REPOS repos/a/b > $OUT/ab.conf
+$(dirname $0)/create-yum-conf $REPOS repos/a/b/c > $OUT/abc.conf
+
+call $CURL $HOST/admin/v1/repos/a?update-metadata | $ASSERT_IN "204 NO CONTENT"
+call $YUMMY $OUT/a.conf clean all
+! call $YUMMY $OUT/a.conf list foo 2>&1 | $ASSERT_IN "No matching"
+call $YUMMY $OUT/ab.conf clean all
+call $YUMMY $OUT/ab.conf list foo 2>&1 | $ASSERT_IN "foo.x86"
+call $YUMMY $OUT/abc.conf clean all
+! call $YUMMY $OUT/abc.conf list foo 2>&1 | $ASSERT_IN "No matching"
+
+echo "cleaning up nested repos"
+call $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/a -s | $ASSERT_IN "204 NO CONTENT"
+
+teardown
