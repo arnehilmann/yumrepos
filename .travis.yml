@@ -8,7 +8,7 @@ python:
 services:
   - docker
 install:
-  - sudo apt-get install -y rpm createrepo_c
+  - sudo apt-get install -y rpm createrepo
   - pip install coveralls
   - pip install pybuilder
   - pyb install_dependencies
