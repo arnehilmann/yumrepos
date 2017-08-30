@@ -14,7 +14,7 @@ call $CURL -F pathspec="base/{6,7}/{x86_64,SRPMS,noarch,repodata}" $HOST/admin/v
 call $CURL -F pathspec="base/.{./,8}" $HOST/admin/v1/repos | $ASSERT_IN "403 FORBIDDEN"
 call $CURL -F pathspec="base/foo,base/bar" $HOST/admin/v1/repos | $ASSERT_IN "201 CREATED"
 call $CURL -F pathspec="base/{6,7}/{x86_64,SRPMS,noarch}" $HOST/admin/v1/repos | $ASSERT_IN "201 CREATED"
-ls -al target/repos/
+find ${REPOS#file://} -type d
 
 echo "cleaning up bulk repos"
 call $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/base | $ASSERT_IN "204 NO CONTENT"
