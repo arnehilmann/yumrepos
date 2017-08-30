@@ -11,6 +11,7 @@ install:
   - wget https://github.com/arnehilmann/yumrepos/releases/download/createrepo-c-deb/createrepo-c_1.0_amd64.deb
   - sudo dpkg -i createrepo-c_1.0_amd64.deb
   - sudo apt-get install -f
+  - sudo apt-get install -y yum rpm
   - pip install coveralls
   - pip install pybuilder
   - pyb install_dependencies
