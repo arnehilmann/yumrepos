@@ -169,9 +169,35 @@ scripts/init-virtualenv
 pyb
 ```
 
-### create dummy rpm
+### create dummy rpm, when fpm tool not available
 
 ```
-docker run -it -v $PWD:/local -w /local alanfranz/fwd-centos-7 bash
-fpm -s empty -t rpm -n foo -v 1.42
+docker run -it -v $PWD:/local -w /local alanfranz/fwd-centos-7 fpm -s empty -t rpm -n foo -v 1.42
+```
+
+### build debian package of createrepo_c, for build on travis-ci
+
+```
+git clone https://github.com/rpm-software-management/createrepo_c.git
+cd createrepo_c
+```
+
+```
+docker run -v $PWD:/local -it ubuntu:trusty bash
+mkdir build
+cd build
+apt-get update
+apt-get install -y libbz2-dev cmake libexpat1-dev libmagic-dev libglib2.0-dev libcurl4-openssl-dev \
+    libxml2-dev libpython2.7-dev librpm-dev libssl-dev libsqlite3-dev liblzma-dev zlib1g-dev doxygen \
+    check python-nose
+cmake ..
+make
+mkdir -p docroot/usr/{bin,lib}
+mv src/lib* docroot/usr/lib
+mv src/*_c docroot/usr/bin
+exit
+```
+
+```
+fpm -t deb -n createrepo_c -s dir -C docroot/ --verbose .
 ```
