@@ -2,13 +2,8 @@
 set -e -E -u -C
 
 function setup {
-    # TESTREPO1=testrepo1
-    # TESTREPO2=testrepo2
-    # TESTREPO3=testrepo3
-    # TESTRPM=foo-1.0-1.x86_64.rpm
-
     CURL="curl -kLis"
-    ASSERT_IN="grep -i -B 100"
+    ASSERT_IN="grep -i -B 5"
     OUT=target/$(basename $0)
 
     function call {
@@ -22,7 +17,11 @@ function setup {
         exit 2
     }
 
-    trap "echo; echo; echo AN ERROR OCCURED; echo; exit 1" ERR
+    function fail {
+        return 1
+    }
+
+    trap 'echo; echo; echo "AN ERROR OCCURED ON $(basename $0):$LINENO !"; echo; exit 1' ERR
 
     rm -rf $OUT/* && mkdir -pv $OUT
 
