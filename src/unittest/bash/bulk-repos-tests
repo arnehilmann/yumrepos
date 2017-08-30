@@ -10,11 +10,19 @@ setup
 
 echo "create bulk repos"
 call $CURL -F wrong_paramater_name="foo" $HOST/admin/v1/repos | $ASSERT_IN "400 BAD REQUEST"
-call $CURL -F pathspec="base/{6,7}/{x86_64,SRPMS,noarch,repodata}" $HOST/admin/v1/repos | $ASSERT_IN "403 FORBIDDEN"
+call $CURL -F pathspec="base/{2,3}/{x86_64,SRPMS,noarch,repodata}" $HOST/admin/v1/repos | $ASSERT_IN "403 FORBIDDEN"
 call $CURL -F pathspec="base/.{./,8}" $HOST/admin/v1/repos | $ASSERT_IN "403 FORBIDDEN"
 call $CURL -F pathspec="base/foo,base/bar" $HOST/admin/v1/repos | $ASSERT_IN "201 CREATED"
 call $CURL -F pathspec="base/{6,7}/{x86_64,SRPMS,noarch}" $HOST/admin/v1/repos | $ASSERT_IN "201 CREATED"
-find ${REPOS#file://} -type d
+RESULT=$(find ${REPOS#file://} -type d)
+echo "$RESULT"
+$ASSERT_IN "base/6/noarch/repodata" <<< "$RESULT"
+$ASSERT_IN "base/6/SRPMS/repodata" <<< "$RESULT"
+$ASSERT_IN "base/6/x86_64/repodata" <<< "$RESULT"
+$ASSERT_IN "base/7/SRPMS/repodata" <<< "$RESULT"
+$ASSERT_IN "base/foo,base/bar/repodata" <<< "$RESULT"
+$ASSERT_IN "base/2" <<< "$RESULT" && fail
+$ASSERT_IN "base/8" <<< "$RESULT" && fail
 
 echo "cleaning up bulk repos"
 call $CURL -X DELETERECURSIVLY $HOST/admin/v1/repos/base | $ASSERT_IN "204 NO CONTENT"
