@@ -90,11 +90,11 @@ and its centos7 configuration!
 _Prerequisites: centos7 machine, with root and internet access_
 
 1. enable epel repos and yum utilities:<br/>
-    ```sudo yum install epel-release yum-utils```
+    ```yum install epel-release yum-utils```
 2. enable this repo:<br/>
-    ```sudo yum-config-manager --add-repo https://arnehilmann.github.io/yumrepos/yumrepos.repo```
+    ```yum-config-manager --add-repo https://arnehilmann.github.io/yumrepos/yumrepos.repo```
 3. install yumrepos configuration for centos7:<br/>
-    ```sudo yum install yumrepos-behind-nginx-on-centos7```
+    ```yum install yumrepos-0.9.10-py27 yumrepos-behind-nginx-on-centos7```
 
 Now just follow the instructions on your new shiny yumrepos server:<br/>
     visit ```https://localhost/```
