@@ -1,23 +1,35 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>The YumRepos Repository :o)</title>
-  <style type="text/css">code{white-space: pre;}</style>
-  <meta charset="utf-8"> <meta name="description" content="Repository for the YumRepos Packages"> <meta name="author" content="Arne Hilmann <arne.hilmann@gmail.com>“&gt; <meta name="viewport" content="width=device-width, initial-scale=1"> <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css"> <link rel="stylesheet" href="css/normalize.css"> <link rel="stylesheet" href="css/skeleton.css"> <link rel="stylesheet" href="css/ribbons.css"> <link rel="stylesheet" href="css/custom.css"> <link rel="icon" type="image/png" href="images/favicon.png">
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      div.line-block{white-space: pre-line;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <meta charset="utf-8">
+  <meta name="description" content="Repository for the YumRepos Packages">
+  <meta name="author" content="Arne Hilmann <arne.hilmann@gmail.com>">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css"> <link rel="stylesheet" href="css/normalize.css"> <link rel="stylesheet" href="css/skeleton.css"> <link rel="stylesheet" href="css/ribbons.css"> <link rel="stylesheet" href="css/custom.css"> <link rel="icon" type="image/png" href="images/favicon.png">
   <style> .header{background-image:url("images/header3.jpeg");} .header, .footer {background-size:cover; color:#ccc;} .oncoloredbg, .oncoloredbg * {font-weight:300;text-shadow:0 0 2px black;} h4{padding-top:2rem;} body{background-color:#f9f9f9;} .sidenote{color:#555;font-style:italic;font-size:80%;display:inline-block;width:66%;margin-left:31%;text-align:right;} li{padding-left:1rem;text-indent:-1rem;} </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="js/site.js"></script>
 </head>
 <body>
-<div class="section header">
+<section class="header">
 <div class="container oncoloredbg" style="padding-top: 8%; padding-bottom: 3%;">
 <h2 id="yumrepos">YumRepos</h2>
 <p>Serve RPMs, locally, secure, fast, simple</p>
 </div>
-</div>
+</section>
 <div class="ribbon right grey">
 <a href="https://github.com/arnehilmann/yumrepos">Visit me on GitHub</a>
 </div>
@@ -57,10 +69,10 @@
 <p><a href="https://github.com/arnehilmann/yumrepos/tree/master/docs">This place here</a> also hosts the yum repository for the yumrepos rpms and its centos7 configuration!</p>
 <h4 id="installation">Installation</h4>
 <p><em>Prerequisites: centos7 machine, with root and internet access</em></p>
-<ol style="list-style-type: decimal">
-<li>enable epel repos and yum utilities:<br/> <code>sudo yum install epel-release yum-utils</code></li>
-<li>enable this repo:<br/> <code>sudo yum-config-manager --add-repo https://arnehilmann.github.io/yumrepos/yumrepos.repo</code></li>
-<li>install yumrepos configuration for centos7:<br/> <code>sudo yum install yumrepos-behind-nginx-on-centos7</code></li>
+<ol type="1">
+<li>enable epel repos and yum utilities:<br/> <code>yum install epel-release yum-utils</code></li>
+<li>enable this repo:<br/> <code>yum-config-manager --add-repo https://arnehilmann.github.io/yumrepos/yumrepos.repo</code></li>
+<li>install yumrepos configuration for centos7:<br/> <code>yum install yumrepos-0.9.10-py27 yumrepos-behind-nginx-on-centos7</code></li>
 </ol>
 <p>Now just follow the instructions on your new shiny yumrepos server:<br/> visit <code>https://localhost/</code></p>
 <h4 id="further-questionscomments">Further Questions/Comments?</h4>
