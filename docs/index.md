@@ -1,11 +1,8 @@
 ---
 title: The YumRepos Repository :o)
 header-includes:
-    <meta charset="utf-8">
     <meta name="description" content="Repository for the YumRepos Packages">
     <meta name="author" content="Arne Hilmann <arne.hilmann@gmail.com>">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
@@ -24,6 +21,7 @@ header-includes:
         body{background-color:#f9f9f9;}
         .sidenote{color:#555;font-style:italic;font-size:80%;display:inline-block;width:66%;margin-left:31%;text-align:right;}
         li{padding-left:1rem;text-indent:-1rem;}
+        div.column{width:100%;}
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="js/site.js"></script>
